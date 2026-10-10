@@ -1,0 +1,21 @@
+test_class_order (test_config.TestConfig.test_class_order)
+TC-CFG-001: class order is the fixed global order. ... ok
+test_class_to_index_consistent (test_config.TestConfig.test_class_to_index_consistent)
+TC-CFG-002: CLASS_TO_INDEX matches CLASS_NAMES position for every entry. ... ok
+test_exactly_three_hospitals (test_config.TestConfig.test_exactly_three_hospitals)
+TC-CFG-003: HOSPITALS contains exactly 3 entries. ... ok
+test_hospital2_classes (test_config.TestConfig.test_hospital2_classes)
+TC-CFG-006: hospital 2 has NORMAL, TUBERCULOSIS. ... ok
+test_hospital3_classes (test_config.TestConfig.test_hospital3_classes)
+TC-CFG-005: hospital 3 has COVID19, NORMAL, PNEUMONIA. ... ok
+test_hospital_classes_subset_of_class_names (test_config.TestConfig.test_hospital_classes_subset_of_class_names)
+TC-CFG-004: every hospital's class list is a subset of CLASS_NAMES. ... ok
+test_project_root_config_exists (test_config.TestConfig.test_project_root_config_exists)
+TC-CFG-008: PROJECT_ROOT/medifed/config.py resolves to an existing file. ... ok
+test_seed_is_int (test_config.TestConfig.test_seed_is_int)
+TC-CFG-007: SEED is an integer. ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.000s
+
+OK
