@@ -1,0 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cu126
+torch==2.14.0+cu126
+torchvision==0.29.0+cu126
+flwr==1.36.0
+numpy==2.4.6
+grpcio==1.84.0
+protobuf==6.33.6

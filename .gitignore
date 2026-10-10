@@ -1,0 +1,34 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Datasets and model weights (large; regenerate locally, never commit)
+# To share a final model deliberately, agree it as a team, then git add -f it.
+data/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+
+# Flower local state
+.flwr/
+
+# Secrets
+.env
+kaggle.json
+
+# OS / editor junk (includes macOS AppleDouble files)
+.DS_Store
+._*
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Logs
+*.log
