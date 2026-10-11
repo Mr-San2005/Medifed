@@ -1,0 +1,45 @@
+test_class_order (test_config.TestConfig.test_class_order)
+TC-CFG-001: class order is the fixed global order. ... ok
+test_class_to_index_consistent (test_config.TestConfig.test_class_to_index_consistent)
+TC-CFG-002: CLASS_TO_INDEX matches CLASS_NAMES position for every entry. ... ok
+test_exactly_three_hospitals (test_config.TestConfig.test_exactly_three_hospitals)
+TC-CFG-003: HOSPITALS contains exactly 3 entries. ... ok
+test_hospital2_classes (test_config.TestConfig.test_hospital2_classes)
+TC-CFG-006: hospital 2 has NORMAL, TUBERCULOSIS. ... ok
+test_hospital3_classes (test_config.TestConfig.test_hospital3_classes)
+TC-CFG-005: hospital 3 has COVID19, NORMAL, PNEUMONIA. ... ok
+test_hospital_classes_subset_of_class_names (test_config.TestConfig.test_hospital_classes_subset_of_class_names)
+TC-CFG-004: every hospital's class list is a subset of CLASS_NAMES. ... ok
+test_project_root_config_exists (test_config.TestConfig.test_project_root_config_exists)
+TC-CFG-008: PROJECT_ROOT/medifed/config.py resolves to an existing file. ... ok
+test_seed_is_int (test_config.TestConfig.test_seed_is_int)
+TC-CFG-007: SEED is an integer. ... ok
+test_cap_respected (test_data.TestBuildManifest.test_cap_respected)
+TC-DATA-007: per-class cap is respected; no class exceeds the cap. ... ok
+test_global_indices_hospital2_style (test_data.TestBuildManifest.test_global_indices_hospital2_style)
+TC-DATA-009: hospital-2-style folder gives NORMAL=1 and TUBERCULOSIS=3 (global indices). ... ok
+test_same_seed_same_sample (test_data.TestBuildManifest.test_same_seed_same_sample)
+TC-DATA-008: the same seed produces an identical sample on two calls. ... ok
+test_train_val_no_overlap (test_data.TestBuildManifest.test_train_val_no_overlap)
+TC-DATA-010: train and val splits are stratified per class and have no path overlap. ... ok
+test_dataset_item_shape_and_type (test_data.TestDataset.test_dataset_item_shape_and_type)
+TC-DATA-012: dataset item is a float tensor of shape 3x224x224 with an integer label. ... ok
+test_corrupt_skipped (test_data.TestFindImages.test_corrupt_skipped)
+TC-DATA-002: corrupt image is not returned and is counted in skipped['unreadable']. ... ok
+test_junk_skipped (test_data.TestFindImages.test_junk_skipped)
+TC-DATA-001: '._' junk file is not returned and is counted in skipped['junk']. ... ok
+test_lung_opacity_excluded (test_data.TestFindImages.test_lung_opacity_excluded)
+TC-DATA-004: images inside 'Lung_Opacity' folder are excluded. ... ok
+test_macosx_excluded (test_data.TestFindImages.test_macosx_excluded)
+TC-DATA-005: images inside '__MACOSX' folder are excluded. ... ok
+test_masks_excluded (test_data.TestFindImages.test_masks_excluded)
+TC-DATA-003: images inside a 'masks' folder are excluded and counted. ... ok
+test_nearest_ancestor_class (test_data.TestFindImages.test_nearest_ancestor_class)
+TC-DATA-006: class comes from the nearest matching ancestor (COVID19/images/x.png -> COVID19). ... ok
+test_write_read_roundtrip (test_data.TestManifestIO.test_write_read_roundtrip)
+TC-DATA-011: manifest write/read round-trip is lossless; relative paths use forward slashes. ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 3.554s
+
+OK

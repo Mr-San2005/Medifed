@@ -6,38 +6,47 @@ Each section covers one planned module. Status is updated at the end of each pha
 
 ## 1. `medifed/config.py` — Configuration Constants
 
-**Status: Phase 0 — Built**
+**Status: Phase 1 — Built**
 
 **Purpose:** Single source of truth for all paths, seeds, class names and hospital metadata. No logic beyond path construction.
 
 **Contents:**
 - `PROJECT_ROOT`, `DATA_DIR`, `RAW_DIR`, `PROCESSED_DIR`, `CHECKPOINT_DIR`, `RESULTS_DIR` — `pathlib.Path` objects anchored to `__file__`.
-- `SEED`, `IMAGE_SIZE`, `MAX_IMAGES_PER_CLASS` — scalar constants.
+- `SEED`, `IMAGE_SIZE`, `MAX_IMAGES_PER_CLASS`, `VAL_FRACTION`, `IMAGE_EXTENSIONS` — scalar constants.
 - `CLASS_NAMES`, `CLASS_TO_INDEX` — global class registry.
-- `EXCLUDE_FOLDER_NAMES` — folders never treated as class folders.
+- `EXCLUDE_FOLDER_NAMES` — folders never treated as class folders (`masks`, `Lung_Opacity`, `__MACOSX`).
+- `HOSPITAL_RAW_DIRS` — maps hospital ID (1/2/3) to its raw data path.
+- `FOLDER_TO_CLASS` — maps lowercase folder name to global class name, per hospital.
 - `HOSPITALS` — dict keyed by hospital ID with display name, Kaggle slug and local class list.
 
 ---
 
 ## 2. `medifed/data.py` — Data Pipeline
 
-**Status: Phase 1 — Planned**
+**Status: Phase 1 — Built**
 
-**Purpose:** Load, filter, cap and transform images for a given hospital into a PyTorch Dataset.
+**Purpose:** Load, filter, cap and transform images for a given hospital into a PyTorch Dataset and DataLoader.
 
-**Planned functions:**
+**Functions:**
 
 | Function | Inputs | Output |
 |---|---|---|
-| `list_image_paths(hospital_dir, classes)` | Path to hospital folder, list of class names | `dict[class_name -> [Path]]` of valid image paths after all filters |
-| `apply_cap(paths_by_class, cap, seed)` | Dict of paths, integer cap, int seed | Same dict with each list capped to `cap` items |
-| `build_dataset(hospital_id, split, transform)` | Hospital ID (1/2/3), split name, torchvision transform | `torch.utils.data.Dataset` yielding `(tensor, global_index)` |
-| `get_dataloader(dataset, batch_size, shuffle)` | Dataset, batch size, shuffle flag | `DataLoader` with `num_workers=0` |
+| `find_images(raw_dir, folder_to_class)` | Hospital raw dir `Path`, `dict[str->str]` folder-to-class map | `(images_by_class: dict[str->[Path]], skipped: dict[str->int])` |
+| `build_manifest(images_by_class, raw_dir, cap, val_fraction, seed)` | Dict of paths, raw dir, cap int, fraction float, seed int | `list[dict]` rows with `relative_path`, `class_name`, `class_index`, `split` |
+| `write_manifest(rows, path)` | List of row dicts, output `Path` | Writes CSV to `path` |
+| `read_manifest(path)` | CSV `Path` | `list[dict]` with `class_index` as `int` |
+| `get_transforms(train)` | `bool` | `transforms.Compose` (Resize, ToTensor, Normalize; +RandomRotation(5) if train) |
+| `ChestXrayDataset.__init__(rows, raw_dir, transform)` | Manifest rows, raw dir, transform | Dataset instance |
+| `ChestXrayDataset.__getitem__(idx)` | Index | `(float tensor 3×224×224, int class_index)` |
+| `make_loader(hospital_id, split, batch_size, shuffle)` | Hospital ID, split name, batch size, shuffle bool | `DataLoader` with `num_workers=0` |
 
-**Filtering rules (from FR-01):**
+**Filtering rules (FR-01):**
 - Skip filenames starting with `._`.
-- Skip folders in `EXCLUDE_FOLDER_NAMES` and `__MACOSX`.
+- Skip files with extensions not in `IMAGE_EXTENSIONS`.
+- Skip files inside folders in `EXCLUDE_FOLDER_NAMES` (case-insensitive).
 - Skip files PIL cannot open.
+
+**Class assignment:** nearest ancestor folder whose lowercase name is in `folder_to_class`.
 
 ---
 
