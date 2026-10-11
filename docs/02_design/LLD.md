@@ -52,31 +52,33 @@ Each section covers one planned module. Status is updated at the end of each pha
 
 ## 3. `medifed/model.py` — Model Definition
 
-**Status: Phase 2 — Planned**
+**Status: Phase 2 — Built**
 
-**Purpose:** Construct and return the ResNet18 model with a 4-class output head.
+**Purpose:** Construct the ResNet18 model with a 4-class output head, provide device selection and seed utilities.
 
-**Planned functions:**
+**Functions:**
 
 | Function | Inputs | Output |
 |---|---|---|
-| `build_model(num_classes, pretrained)` | Number of output classes (4), bool | ResNet18 with replaced `fc` layer |
+| `build_model(pretrained=True)` | `bool` | ResNet18 with `fc` replaced by `nn.Linear(512, NUM_CLASSES)` |
 | `get_device()` | — | `torch.device` (CUDA if available, else CPU) |
+| `set_seed(seed)` | `int` | Seeds Python `random`, NumPy and PyTorch (CPU + CUDA) |
 
 ---
 
-## 4. `medifed/trainer.py` — Local Training Loop
+## 4. `medifed/train.py` — Local Training Loop
 
-**Status: Phase 2 — Planned**
+**Status: Phase 2 — Built**
 
-**Purpose:** Run one or more local epochs of SGD on a hospital's dataset.
+**Purpose:** Plain functions for one training epoch, full evaluation with metrics, and a multi-epoch fit loop.
 
-**Planned functions:**
+**Functions:**
 
 | Function | Inputs | Output |
 |---|---|---|
-| `train_one_epoch(model, loader, optimizer, criterion, device)` | Model, DataLoader, optimizer, loss fn, device | `(avg_loss, accuracy)` |
-| `evaluate(model, loader, criterion, device)` | Model, DataLoader, loss fn, device | `(avg_loss, accuracy)` |
+| `train_one_epoch(model, loader, optimizer, loss_fn, device)` | Model, DataLoader, Adam optimizer, CrossEntropyLoss, device | `(mean_loss: float, accuracy: float)` |
+| `evaluate(model, loader, device)` | Model, DataLoader, device | `dict` with `loss`, `accuracy`, `num_samples`, `confusion_matrix` (NUM_CLASSES×NUM_CLASSES list), `per_class_recall` (list, None for absent classes) |
+| `fit(model, train_loader, val_loader, epochs, lr, device)` | Model, two DataLoaders, int, float, device | `list[dict]` one per epoch: `epoch`, `train_loss`, `train_acc`, `val_loss`, `val_acc` |
 
 ---
 

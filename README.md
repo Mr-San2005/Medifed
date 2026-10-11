@@ -57,7 +57,7 @@ MediFed/
 |---|---|---|
 | 0 | Skeleton, config, test runner, documentation structure | Done |
 | 1 | Data pipeline (3 hospitals, filters, cap, verified counts) | Done |
-| 2 | ResNet18 4-class model and local training sanity check | Not started |
+| 2 | ResNet18 4-class model and local training sanity check | Done |
 | 3 | Flower FedAvg baseline with 3 hospital clients | Not started |
 | 4 | FedBN personalized mode and baseline vs personalized comparison | Not started |
 | 5 | Grad-CAM and multi-disease demo | Not started |
@@ -88,6 +88,12 @@ Verify manifests, load a batch from each hospital, save sample grid:
 
 ```powershell
 python scripts/verify_data.py
+```
+
+Train local ResNet18 models at all three hospitals (saves checkpoints, prints metrics):
+
+```powershell
+python scripts/train_local.py
 ```
 
 Test output is saved automatically to `docs/04_testing/test_runs/test_run_YYYYMMDD_HHMMSS.txt`.

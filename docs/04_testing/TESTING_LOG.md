@@ -22,3 +22,11 @@
 | 2026-10-10 | 1 | TC-DATA-010 | Train/val no overlap, both non-empty | intersection = {} | Empty | PASS | |
 | 2026-10-10 | 1 | TC-DATA-011 | Manifest write/read round-trip lossless, forward slashes | loaded == original, no backslashes | Lossless | PASS | |
 | 2026-10-10 | 1 | TC-DATA-012 | Dataset item: float tensor 3×224×224, integer label | shape=(3,224,224), dtype=float32 | Correct | PASS | |
+| 2026-10-11 | 2 | TC-MODEL-001 | build_model output shape is (batch, 4) for 224×224 input | shape == (2, 4) | (2, 4) | PASS | |
+| 2026-10-11 | 2 | TC-MODEL-002 | Final layer has 4 outputs and in_features=512 | fc.out=4, fc.in=512 | Correct | PASS | |
+| 2026-10-11 | 2 | TC-MODEL-003 | get_device returns cuda (CUDA available) | device.type == "cuda" | "cuda" | PASS | |
+| 2026-10-11 | 2 | TC-MODEL-004 | set_seed makes two models have identical weights | all params equal | Equal | PASS | |
+| 2026-10-11 | 2 | TC-TRAIN-001 | 30 training steps lower the loss on 8 synthetic images | last_loss < first_loss | Confirmed | PASS | |
+| 2026-10-11 | 2 | TC-TRAIN-002 | evaluate: accuracy in [0,1], num_samples=8, confusion sum=8 | All conditions | Correct | PASS | |
+| 2026-10-11 | 2 | TC-TRAIN-003 | per_class_recall is None for classes with no true samples | recall[2]=None, recall[3]=None | None | PASS | |
+| 2026-10-11 | 2 | TC-TRAIN-004 | Checkpoint save/load gives identical outputs | allclose(out1, out2) | True | PASS | |
