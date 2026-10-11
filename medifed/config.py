@@ -31,6 +31,9 @@ IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 CLASS_NAMES = ["COVID19", "NORMAL", "PNEUMONIA", "TUBERCULOSIS"]
 CLASS_TO_INDEX = {name: idx for idx, name in enumerate(CLASS_NAMES)}
 
+# Derived from CLASS_NAMES so the model head always matches the class registry.
+NUM_CLASSES = len(CLASS_NAMES)
+
 # Folder names that are never treated as class folders, regardless of hospital.
 # Checked case-insensitively at walk time; __MACOSX is also excluded.
 EXCLUDE_FOLDER_NAMES = ["masks", "Lung_Opacity", "__MACOSX"]
@@ -78,3 +81,11 @@ HOSPITALS = {
         "classes": ["COVID19", "NORMAL", "PNEUMONIA"],
     },
 }
+
+# Local training hyperparameters.
+# Batch size of 16 keeps peak GPU memory well under 4 GB at 224×224.
+BATCH_SIZE = 16
+# 5 epochs is enough for a sanity check that the model learns from each hospital's data.
+LOCAL_EPOCHS = 5
+# 1e-4 is a conservative learning rate for fine-tuning a pretrained backbone.
+LEARNING_RATE = 1e-4
