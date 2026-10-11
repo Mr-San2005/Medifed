@@ -20,13 +20,45 @@ IMAGE_SIZE = 224
 # Per-class cap applied during data loading (keeps GPU memory and training time bounded).
 MAX_IMAGES_PER_CLASS = 500
 
+# Fraction of each class held out for validation.
+VAL_FRACTION = 0.2
+
+# Only files with these extensions are treated as images.
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
+
 # Global class order — defined once, used identically by every hospital.
 # A hospital that lacks a class still uses these global indices.
 CLASS_NAMES = ["COVID19", "NORMAL", "PNEUMONIA", "TUBERCULOSIS"]
 CLASS_TO_INDEX = {name: idx for idx, name in enumerate(CLASS_NAMES)}
 
 # Folder names that are never treated as class folders, regardless of hospital.
-EXCLUDE_FOLDER_NAMES = ["masks", "Lung_Opacity"]
+# Checked case-insensitively at walk time; __MACOSX is also excluded.
+EXCLUDE_FOLDER_NAMES = ["masks", "Lung_Opacity", "__MACOSX"]
+
+# Per-hospital raw data directories.
+HOSPITAL_RAW_DIRS = {
+    1: RAW_DIR / "hospital1",
+    2: RAW_DIR / "hospital2",
+    3: RAW_DIR / "hospital3",
+}
+
+# Maps lowercase folder name -> global class name, per hospital.
+# Used by find_images to assign a class to each image without relying on ImageFolder.
+FOLDER_TO_CLASS = {
+    1: {
+        "normal":    "NORMAL",
+        "pneumonia": "PNEUMONIA",
+    },
+    2: {
+        "normal":       "NORMAL",
+        "tuberculosis": "TUBERCULOSIS",
+    },
+    3: {
+        "covid19":   "COVID19",
+        "normal":    "NORMAL",
+        "pneumonia": "PNEUMONIA",
+    },
+}
 
 # Hospital registry: display name, Kaggle dataset slug, and the classes present locally.
 HOSPITALS = {
