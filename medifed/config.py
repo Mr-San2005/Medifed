@@ -1,15 +1,34 @@
 """Constants for MediFed. One source of truth for paths, seeds, classes and hospital metadata."""
 
+import os
 from pathlib import Path
 
-# Anchor every path to this file so the project is relocatable.
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+def resolve_project_root(env_value, fallback):
+    """Return Path(env_value) when it is a non-empty string, otherwise fallback.
+
+    Client processes started by Flower run from a copy of the app under the user
+    profile, so they cannot locate the project by this file's location. The
+    launcher sets MEDIFED_ROOT; local scripts and tests leave it unset and use
+    the folder that contains medifed/.
+    """
+    if isinstance(env_value, str) and env_value != "":
+        return Path(env_value)
+    return fallback
+
+
+# Anchor every path to this file so the project is relocatable when MEDIFED_ROOT is unset.
+PROJECT_ROOT = resolve_project_root(
+    os.environ.get("MEDIFED_ROOT"),
+    Path(__file__).resolve().parent.parent,
+)
 
 DATA_DIR        = PROJECT_ROOT / "data"
 RAW_DIR         = DATA_DIR / "raw"
 PROCESSED_DIR   = DATA_DIR / "processed"
 CHECKPOINT_DIR  = PROJECT_ROOT / "checkpoints"
 RESULTS_DIR     = PROJECT_ROOT / "results"
+RUNS_DIR        = RESULTS_DIR / "runs"
 
 # Training reproducibility.
 SEED = 42
@@ -89,3 +108,10 @@ BATCH_SIZE = 16
 LOCAL_EPOCHS = 5
 # 1e-4 is a conservative learning rate for fine-tuning a pretrained backbone.
 LEARNING_RATE = 1e-4
+
+# Federated baseline (plain FedAvg) hyperparameters.
+FL_NUM_HOSPITALS = 3
+FL_NUM_ROUNDS = 10
+# One local epoch per round keeps each Flower round short on this machine.
+FL_LOCAL_EPOCHS = 1
+DEFAULT_RUN_NAME = "baseline_seed42"
