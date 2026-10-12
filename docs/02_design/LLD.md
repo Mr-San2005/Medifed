@@ -84,26 +84,55 @@ Each section covers one planned module. Status is updated at the end of each pha
 
 ## 5. `medifed/client_app.py` — Flower Client
 
-**Status: Phase 3 — Planned**
+**Status: built in Phase 3a, federation run pending**
 
-**Purpose:** Flower ClientApp that receives global weights, runs local training, and returns updated weights and metrics.
+**Purpose:** Flower 1.36 `ClientApp` for one hospital. Receives the global `state_dict`, trains locally, returns CPU weights and scalar metrics. Images never leave the process (NFR-01).
 
-**Planned handlers:**
-- `@app.train()` — load weights from message, run `train_one_epoch`, return updated weights + `num_examples`.
-- `@app.evaluate()` — load weights, run `evaluate`, return loss + `num_examples`.
+Hospital identity comes from `context.node_config["partition-id"]` via `partition_to_hospital`. The run name comes from `context.run_config["run-name"]`. The current round comes from `msg.content["config"]["server-round"]` (injected by `FedAvg.configure_train` / `configure_evaluate` in flwr 1.36.0).
 
-**FedBN note:** In personalized mode, BatchNorm layer weights are excluded from the received global weights and restored from a local checkpoint file before training.
+**Handlers:**
+
+| Function | Inputs | Output |
+|---|---|---|
+| `train(msg, context)` | Flower `Message`, `Context` | `Message` reply with `ArrayRecord` of the complete CPU `state_dict` and `MetricRecord(train_loss, train_acc, num-examples)` |
+| `evaluate(msg, context)` | Flower `Message`, `Context` | `Message` reply with `MetricRecord(eval_loss, eval_acc, num-examples)` |
+
+Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `build_model(pretrained=False)`, load received weights, run `local_update` for `FL_LOCAL_EPOCHS` with a fresh Adam optimizer, write one train row and (in `evaluate`) one val row to `results/runs/<run-name>/hospital<n>_rounds.csv` (columns: `round, hospital, split, loss, accuracy, num_samples`). One file per hospital so processes do not share a writer.
+
+**FedBN note:** In personalized mode (Phase 4), BatchNorm layer weights are excluded from the received global weights and restored from a local checkpoint file before training.
+
+---
+
+## 5b. `medifed/federated.py` — Federated helpers
+
+**Status: built in Phase 3a, federation run pending**
+
+**Purpose:** Plain helpers with no Flower imports, used by the client app and by unit tests.
+
+**Functions:**
+
+| Function | Inputs | Output |
+|---|---|---|
+| `partition_to_hospital(partition_id)` | Flower partition id `int` | Hospital id `1/2/3`; `ValueError` for any other value |
+| `local_update(model, loader, epochs, lr, device)` | Model, DataLoader, int, float, device | `dict` with `train_loss`, `train_acc` after `epochs` of `train_one_epoch` with a fresh Adam optimizer |
+| `state_dict_to_cpu(model)` | Model | `state_dict` with every tensor on CPU |
+| `append_round_row(csv_path, row_dict)` | `Path`, row `dict` | Creates parent folders, writes the header only when the file is new, appends one row |
 
 ---
 
 ## 6. `medifed/server_app.py` — Flower Server
 
-**Status: Phase 3 — Planned**
+**Status: built in Phase 3a, federation run pending**
 
-**Purpose:** Flower ServerApp that runs FedAvg aggregation for the configured number of rounds.
+**Purpose:** Flower 1.36 `ServerApp` that runs plain FedAvg over the complete `state_dict` (weights and BatchNorm statistics), weighted by `num-examples`.
 
-**Planned handlers:**
-- `@app.main()` — initialize model, run `strategy.start(...)`, save final weights to `checkpoints/`.
+**Handlers:**
+
+| Function | Inputs | Output |
+|---|---|---|
+| `main(grid, context)` | Flower `Grid`, `Context` | `None`. Reads `num-server-rounds` and `run-name` from `context.run_config`. After `set_seed(SEED)`, builds `build_model(pretrained=True)` and sends it as `ArrayRecord(model.state_dict())`. |
+
+`FedAvg` is constructed with `fraction_train=1.0`, `fraction_evaluate=1.0`, `min_train_nodes=3`, `min_evaluate_nodes=3`, `min_available_nodes=3` (parameter names from `FedAvg.__init__` in flwr 1.36.0). `train_config` is `ConfigRecord({"lr": LEARNING_RATE})`. After `strategy.start`, the final weights `result.arrays.to_torch_state_dict()` are saved to `checkpoints/<run-name>_global.pt` and the process prints `FEDERATED RUN FINISHED: <run-name>`.
 
 ---
 

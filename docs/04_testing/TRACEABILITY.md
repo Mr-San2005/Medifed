@@ -6,7 +6,7 @@
 | FR-02 | One fixed global class mapping for all hospitals | TC-CFG-001, TC-CFG-002 | Phase 0 — Done |
 | FR-03 | Reproducible per-class cap with fixed seed | TC-DATA-007, TC-DATA-008 | Phase 1 — Done |
 | FR-04 | Train 4-class ResNet18 locally per hospital | TC-MODEL-001, TC-MODEL-002, TC-TRAIN-001, TC-TRAIN-002 | Phase 2 — Done |
-| FR-05 | Federated FedAvg baseline | TC-FED-001, TC-FED-002 | Phase 3 — Planned |
+| FR-05 | Federated FedAvg baseline | TC-FED-001, TC-FED-002, TC-FED-003, TC-FED-004, TC-FED-005, TC-FED-006, TC-FED-007 | Phase 3a — implemented, run pending |
 | FR-06 | Personalized FedBN mode | TC-PERS-001, TC-PERS-002 | Phase 4 — Planned |
 | FR-07 | Saved baseline vs personalized comparison | TC-EVAL-001 | Phase 4 — Planned |
 | FR-08 | Grad-CAM heatmap for top prediction | TC-GCAM-001 | Phase 5 — Planned |

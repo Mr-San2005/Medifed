@@ -1,0 +1,75 @@
+test_class_order (test_config.TestConfig.test_class_order)
+TC-CFG-001: class order is the fixed global order. ... ok
+test_class_to_index_consistent (test_config.TestConfig.test_class_to_index_consistent)
+TC-CFG-002: CLASS_TO_INDEX matches CLASS_NAMES position for every entry. ... ok
+test_exactly_three_hospitals (test_config.TestConfig.test_exactly_three_hospitals)
+TC-CFG-003: HOSPITALS contains exactly 3 entries. ... ok
+test_hospital2_classes (test_config.TestConfig.test_hospital2_classes)
+TC-CFG-006: hospital 2 has NORMAL, TUBERCULOSIS. ... ok
+test_hospital3_classes (test_config.TestConfig.test_hospital3_classes)
+TC-CFG-005: hospital 3 has COVID19, NORMAL, PNEUMONIA. ... ok
+test_hospital_classes_subset_of_class_names (test_config.TestConfig.test_hospital_classes_subset_of_class_names)
+TC-CFG-004: every hospital's class list is a subset of CLASS_NAMES. ... ok
+test_project_root_config_exists (test_config.TestConfig.test_project_root_config_exists)
+TC-CFG-008: PROJECT_ROOT/medifed/config.py resolves to an existing file. ... ok
+test_seed_is_int (test_config.TestConfig.test_seed_is_int)
+TC-CFG-007: SEED is an integer. ... ok
+test_cap_respected (test_data.TestBuildManifest.test_cap_respected)
+TC-DATA-007: per-class cap is respected; no class exceeds the cap. ... ok
+test_global_indices_hospital2_style (test_data.TestBuildManifest.test_global_indices_hospital2_style)
+TC-DATA-009: hospital-2-style folder gives NORMAL=1 and TUBERCULOSIS=3 (global indices). ... ok
+test_same_seed_same_sample (test_data.TestBuildManifest.test_same_seed_same_sample)
+TC-DATA-008: the same seed produces an identical sample on two calls. ... ok
+test_train_val_no_overlap (test_data.TestBuildManifest.test_train_val_no_overlap)
+TC-DATA-010: train and val splits are stratified per class and have no path overlap. ... ok
+test_dataset_item_shape_and_type (test_data.TestDataset.test_dataset_item_shape_and_type)
+TC-DATA-012: dataset item is a float tensor of shape 3x224x224 with an integer label. ... ok
+test_corrupt_skipped (test_data.TestFindImages.test_corrupt_skipped)
+TC-DATA-002: corrupt image is not returned and is counted in skipped['unreadable']. ... ok
+test_junk_skipped (test_data.TestFindImages.test_junk_skipped)
+TC-DATA-001: '._' junk file is not returned and is counted in skipped['junk']. ... ok
+test_lung_opacity_excluded (test_data.TestFindImages.test_lung_opacity_excluded)
+TC-DATA-004: images inside 'Lung_Opacity' folder are excluded. ... ok
+test_macosx_excluded (test_data.TestFindImages.test_macosx_excluded)
+TC-DATA-005: images inside '__MACOSX' folder are excluded. ... ok
+test_masks_excluded (test_data.TestFindImages.test_masks_excluded)
+TC-DATA-003: images inside a 'masks' folder are excluded and counted. ... ok
+test_nearest_ancestor_class (test_data.TestFindImages.test_nearest_ancestor_class)
+TC-DATA-006: class comes from the nearest matching ancestor (COVID19/images/x.png -> COVID19). ... ok
+test_write_read_roundtrip (test_data.TestManifestIO.test_write_read_roundtrip)
+TC-DATA-011: manifest write/read round-trip is lossless; relative paths use forward slashes. ... ok
+test_client_and_server_expose_app (test_federated.TestAppImports.test_client_and_server_expose_app)
+TC-FED-006 medifed.client_app and medifed.server_app import successfully and each exposes an object named app ... ok
+test_header_once_then_append (test_federated.TestAppendRoundRow.test_header_once_then_append)
+TC-FED-005 append_round_row writes the header exactly once and appends rows (use a temp folder) ... ok
+test_state_dict_shape_and_finite_loss (test_federated.TestLocalUpdate.test_state_dict_shape_and_finite_loss)
+TC-FED-004 after local_update on 8 synthetic images with a pretrained=False model, the state_dict keys and tensor shapes are identical to those before, and the returned train_loss is a finite number ... ok
+test_mapping_and_errors (test_federated.TestPartitionToHospital.test_mapping_and_errors)
+TC-FED-003 partition_to_hospital maps 0,1,2 to 1,2,3 and raises ValueError for 3 and -1 ... ok
+test_env_path_when_set (test_federated.TestResolveProjectRoot.test_env_path_when_set)
+TC-FED-001 resolve_project_root returns the environment path when it is set ... ok
+test_fallback_when_missing (test_federated.TestResolveProjectRoot.test_fallback_when_missing)
+TC-FED-002 resolve_project_root returns the fallback when the value is None or empty ... ok
+test_all_tensors_on_cpu (test_federated.TestStateDictToCpu.test_all_tensors_on_cpu)
+TC-FED-007 state_dict_to_cpu returns tensors that all live on cpu ... ok
+test_final_layer_only_changed (test_model.TestBuildModel.test_final_layer_only_changed)
+TC-MODEL-002: the final layer has exactly 4 outputs and no other layer was changed in shape. ... ok
+test_get_device_type (test_model.TestBuildModel.test_get_device_type)
+TC-MODEL-003: get_device returns cuda when available and cpu otherwise. ... ok
+test_output_shape (test_model.TestBuildModel.test_output_shape)
+TC-MODEL-001: build_model output shape is (batch, 4) for a 224x224 input. ... ok
+test_set_seed_identical_weights (test_model.TestBuildModel.test_set_seed_identical_weights)
+TC-MODEL-004: set_seed makes two freshly built models have identical weights. ... ok
+test_checkpoint_save_load_identical_output (test_model.TestTrainFunctions.test_checkpoint_save_load_identical_output)
+TC-TRAIN-004: a checkpoint saved with torch.save and loaded into a fresh model gives identical outputs. ... ok
+test_evaluate_ranges_and_counts (test_model.TestTrainFunctions.test_evaluate_ranges_and_counts)
+TC-TRAIN-002: evaluate returns accuracy in [0,1], num_samples equals dataset size, confusion sum equals num_samples. ... ok
+test_loss_decreases (test_model.TestTrainFunctions.test_loss_decreases)
+TC-TRAIN-001: on 8 synthetic images with fixed labels, 30 training steps lower the loss. ... ok
+test_per_class_recall_none_for_missing_class (test_model.TestTrainFunctions.test_per_class_recall_none_for_missing_class)
+TC-TRAIN-003: per_class_recall is None for a class with no true samples. ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 20.926s
+
+OK

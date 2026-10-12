@@ -30,3 +30,10 @@
 | 2026-10-11 | 2 | TC-TRAIN-002 | evaluate: accuracy in [0,1], num_samples=8, confusion sum=8 | All conditions | Correct | PASS | |
 | 2026-10-11 | 2 | TC-TRAIN-003 | per_class_recall is None for classes with no true samples | recall[2]=None, recall[3]=None | None | PASS | |
 | 2026-10-11 | 2 | TC-TRAIN-004 | Checkpoint save/load gives identical outputs | allclose(out1, out2) | True | PASS | |
+| 2026-10-12 | 3a | TC-FED-001 | resolve_project_root returns the environment path when it is set | Path(env_value) | Path('E:/custom/root') | PASS | |
+| 2026-10-12 | 3a | TC-FED-002 | resolve_project_root returns the fallback when the value is None or empty | fallback | fallback | PASS | |
+| 2026-10-12 | 3a | TC-FED-003 | partition_to_hospital maps 0,1,2 to 1,2,3 and raises ValueError for 3 and -1 | 1,2,3 and ValueError | As expected | PASS | |
+| 2026-10-12 | 3a | TC-FED-004 | local_update keeps state_dict keys/shapes; train_loss is finite | keys/shapes equal, finite loss | Equal, finite | PASS | |
+| 2026-10-12 | 3a | TC-FED-005 | append_round_row writes the header exactly once and appends rows | 1 header + 2 data rows | Correct | PASS | |
+| 2026-10-12 | 3a | TC-FED-006 | client_app and server_app import and expose app | hasattr app | Both expose app | PASS | |
+| 2026-10-12 | 3a | TC-FED-007 | state_dict_to_cpu returns tensors that all live on cpu | device.type == cpu | cpu | PASS | |
