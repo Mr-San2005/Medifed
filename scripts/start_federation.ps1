@@ -13,17 +13,43 @@
 # Close each window manually with Ctrl+C when the run is finished.
 # This script does not execute "flwr run".
 
+param(
+    [switch]$Cpu
+)
+
 $ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $ActivateScript = Join-Path $ProjectRoot "venv\Scripts\Activate.ps1"
+
+function Get-PortsInUse {
+    $portsInUse = @()
+    foreach ($port in 9092..9096) {
+        if (Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue) {
+            $portsInUse += $port
+        }
+    }
+    return $portsInUse
+}
+
+$occupiedPorts = @(Get-PortsInUse)
+if ($occupiedPorts.Count -gt 0) {
+    Write-Host "Ports in use: $($occupiedPorts -join ', ')"
+    Write-Host "Run scripts\stop_federation.ps1 first"
+    exit 1
+}
 
 function Start-FederationWindow {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$CommandLine
+        [string]$CommandLine,
+        [switch]$SetCpu
     )
+    $deviceSetting = ""
+    if ($SetCpu) {
+        $deviceSetting = "`$env:MEDIFED_DEVICE = 'cpu'`n"
+    }
     $inner = @"
 `$env:MEDIFED_ROOT = '$ProjectRoot'
-& '$ActivateScript'
+$deviceSetting& '$ActivateScript'
 Set-Location '$ProjectRoot'
 $CommandLine
 "@
@@ -32,8 +58,8 @@ $CommandLine
 
 Start-FederationWindow "flower-superlink --insecure --disable-runtime-dependency-installation"
 Start-Sleep -Seconds 8
-Start-FederationWindow "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=0 num-partitions=3`" --port 9094"
-Start-FederationWindow "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=1 num-partitions=3`" --port 9095"
-Start-FederationWindow "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=2 num-partitions=3`" --port 9096"
+Start-FederationWindow -SetCpu:$Cpu "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=0 num-partitions=3`" --port 9094"
+Start-FederationWindow -SetCpu:$Cpu "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=1 num-partitions=3`" --port 9095"
+Start-FederationWindow -SetCpu:$Cpu "flower-supernode --insecure --superlink 127.0.0.1:9092 --node-config `"partition-id=2 num-partitions=3`" --port 9096"
 
 Write-Host "Wait until all three SuperNode windows show 'Starting Flower SuperExec', then run:  flwr run . local-deployment --stream"
