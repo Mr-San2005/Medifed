@@ -22,6 +22,7 @@ from medifed.config import (
 )
 from medifed.data import make_loader
 from medifed.model import build_model, get_device
+from medifed.personalization import bn_keys, bn_path, load_bn_state, merge_state
 from medifed.train import evaluate
 
 
@@ -53,6 +54,19 @@ def _recall_csv(value):
     return value if value is not None else ""
 
 
+def _load_model_for_hospital(run_name: str, hospital_id: int, device) -> torch.nn.Module:
+    """Load the global model and, in personalized mode, overlay the hospital's local BN state."""
+    model = build_model(pretrained=False)
+    ckpt_path = CHECKPOINT_DIR / f"{run_name}_global.pt"
+    state = torch.load(ckpt_path, map_location=device, weights_only=True)
+    if ("personalized" in run_name) or (run_name.startswith("personalized_")):
+        local_bn_path = bn_path(run_name, hospital_id)
+        if local_bn_path.exists():
+            state = merge_state(state, load_bn_state(local_bn_path), bn_keys(model))
+    model.load_state_dict(state)
+    return model.to(device)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate a MediFed federated global checkpoint.")
     parser.add_argument(
@@ -74,11 +88,6 @@ def main() -> None:
     print(f"Device: {device}")
     print(f"Checkpoint: {ckpt_path}\n")
 
-    model = build_model(pretrained=False)
-    state = torch.load(ckpt_path, map_location=device, weights_only=True)
-    model.load_state_dict(state)
-    model.to(device)
-
     local_path = RESULTS_DIR / "local_final_metrics.csv"
     local_acc = {}
     with open(local_path, newline="", encoding="utf-8") as handle:
@@ -93,6 +102,7 @@ def main() -> None:
         print(f"Hospital {hid}: {HOSPITALS[hid]['name']}")
         print(f"{'=' * 60}")
 
+        model = _load_model_for_hospital(run_name, hid, device)
         val_loader = make_loader(hid, "val", BATCH_SIZE, shuffle=False)
         metrics = evaluate(model, val_loader, device)
         baseline = majority_baseline(val_loader)

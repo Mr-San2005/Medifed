@@ -53,7 +53,14 @@ $deviceSetting& '$ActivateScript'
 Set-Location '$ProjectRoot'
 $CommandLine
 "@
-    Start-Process -FilePath "powershell" -ArgumentList @("-NoExit", "-Command", $inner)
+    $encodedCommand = [Convert]::ToBase64String(
+        [Text.Encoding]::Unicode.GetBytes($inner)
+    )
+    Start-Process -FilePath "powershell.exe" -ArgumentList @(
+        "-NoExit",
+        "-EncodedCommand",
+        $encodedCommand
+    )
 }
 
 Start-FederationWindow "flower-superlink --insecure --disable-runtime-dependency-installation"
