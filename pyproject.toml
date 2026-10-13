@@ -24,3 +24,5 @@ clientapp = "medifed.client_app:app"
 [tool.flwr.app.config]
 num-server-rounds = 10
 run-name = "baseline_seed42"
+seed = 42
+mode = "baseline"
