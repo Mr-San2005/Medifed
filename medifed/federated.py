@@ -26,6 +26,19 @@ def partition_to_hospital(partition_id: int) -> int:
     return mapping[partition_id]
 
 
+def validate_mode(mode: str, allowed: tuple[str, ...]) -> str:
+    """Return mode when it is allowed, otherwise list the accepted values."""
+    if mode not in allowed:
+        raise ValueError(f"mode must be one of: {', '.join(allowed)}")
+    return mode
+
+
+def reset_round_csv_for_first_round(csv_path: Path, server_round: int) -> None:
+    """Remove an earlier run's rows when a new run reaches its first round."""
+    if server_round == 1:
+        Path(csv_path).unlink(missing_ok=True)
+
+
 def local_update(
     model: nn.Module,
     loader: DataLoader,

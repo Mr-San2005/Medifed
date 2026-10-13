@@ -115,3 +115,5 @@ FL_NUM_ROUNDS = 10
 # One local epoch per round keeps each Flower round short on this machine.
 FL_LOCAL_EPOCHS = 1
 DEFAULT_RUN_NAME = "baseline_seed42"
+FL_SEEDS = (42, 43, 44)
+FL_MODES = ("baseline", "personalized")

@@ -1,5 +1,6 @@
 """ResNet18 model construction and device utilities for MediFed."""
 
+import os
 import random
 
 import numpy as np
@@ -24,10 +25,16 @@ def build_model(pretrained: bool = True) -> nn.Module:
 
 
 def get_device() -> torch.device:
-    """Return CUDA device if available, otherwise CPU.
-
-    The training script uses this so the same code runs on GPU and CPU without changes.
-    """
+    """Return the requested device, or choose CUDA when available."""
+    requested_device = os.environ.get("MEDIFED_DEVICE")
+    if requested_device == "cpu":
+        return torch.device("cpu")
+    if requested_device == "cuda":
+        if not torch.cuda.is_available():
+            raise RuntimeError("MEDIFED_DEVICE is 'cuda' but CUDA is not available")
+        return torch.device("cuda")
+    if requested_device is not None:
+        raise ValueError("MEDIFED_DEVICE must be 'cpu' or 'cuda'")
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
