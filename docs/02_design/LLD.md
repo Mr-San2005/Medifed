@@ -84,11 +84,11 @@ Each section covers one planned module. Status is updated at the end of each pha
 
 ## 5. `medifed/client_app.py` — Flower Client
 
-**Status: built in Phase 3a, federation run pending**
+**Status: built in Phase 3 Part 1, federation run pending**
 
 **Purpose:** Flower 1.36 `ClientApp` for one hospital. Receives the global `state_dict`, trains locally, returns CPU weights and scalar metrics. Images never leave the process (NFR-01).
 
-Hospital identity comes from `context.node_config["partition-id"]` via `partition_to_hospital`. The run name comes from `context.run_config["run-name"]`. The current round comes from `msg.content["config"]["server-round"]` (injected by `FedAvg.configure_train` / `configure_evaluate` in flwr 1.36.0).
+Hospital identity comes from `context.node_config["partition-id"]` via `partition_to_hospital`. The run name, seed and mode come from `context.run_config["run-name"]`, `context.run_config["seed"]` and `context.run_config["mode"]`. The current round comes from `msg.content["config"]["server-round"]` (injected by `FedAvg.configure_train` / `configure_evaluate` in flwr 1.36.0). Only baseline mode is enabled; requesting personalized mode raises `ValueError("personalized mode is added in Phase 4")`.
 
 **Handlers:**
 
@@ -97,7 +97,7 @@ Hospital identity comes from `context.node_config["partition-id"]` via `partitio
 | `train(msg, context)` | Flower `Message`, `Context` | `Message` reply with `ArrayRecord` of the complete CPU `state_dict` and `MetricRecord(train_loss, train_acc, num-examples)` |
 | `evaluate(msg, context)` | Flower `Message`, `Context` | `Message` reply with `MetricRecord(eval_loss, eval_acc, num-examples)` |
 
-Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `build_model(pretrained=False)`, load received weights, run `local_update` for `FL_LOCAL_EPOCHS` with a fresh Adam optimizer, write one train row and (in `evaluate`) one val row to `results/runs/<run-name>/hospital<n>_rounds.csv` (columns: `round, hospital, split, loss, accuracy, num_samples`). One file per hospital so processes do not share a writer.
+Each round the client: `set_seed(seed + 1000 * hospital_id + server_round)`, `build_model(pretrained=False)`, load received weights, run `local_update` for `FL_LOCAL_EPOCHS` with a fresh Adam optimizer, and write one train row and (in `evaluate`) one val row to `results/runs/<run-name>/hospital<n>_rounds.csv` (columns: `round, hospital, split, loss, accuracy, num_samples`). At round 1, `reset_round_csv_for_first_round` removes an earlier file so a repeated run starts with fresh rows. One file per hospital prevents processes from sharing a writer. If fallback manifests are missing and `MEDIFED_ROOT` is unset, the client directs the operator to `scripts/start_federation.ps1`.
 
 **FedBN note:** In personalized mode (Phase 4), BatchNorm layer weights are excluded from the received global weights and restored from a local checkpoint file before training.
 
@@ -105,7 +105,7 @@ Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `bu
 
 ## 5b. `medifed/federated.py` — Federated helpers
 
-**Status: built in Phase 3a, federation run pending**
+**Status: built in Phase 3 Part 1, federation run pending**
 
 **Purpose:** Plain helpers with no Flower imports, used by the client app and by unit tests.
 
@@ -114,6 +114,8 @@ Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `bu
 | Function | Inputs | Output |
 |---|---|---|
 | `partition_to_hospital(partition_id)` | Flower partition id `int` | Hospital id `1/2/3`; `ValueError` for any other value |
+| `validate_mode(mode, allowed)` | Mode string, allowed mode tuple | Mode string; `ValueError` listing accepted values when invalid |
+| `reset_round_csv_for_first_round(csv_path, server_round)` | CSV `Path`, round number | Removes an existing CSV only for round 1 |
 | `local_update(model, loader, epochs, lr, device)` | Model, DataLoader, int, float, device | `dict` with `train_loss`, `train_acc` after `epochs` of `train_one_epoch` with a fresh Adam optimizer |
 | `state_dict_to_cpu(model)` | Model | `state_dict` with every tensor on CPU |
 | `append_round_row(csv_path, row_dict)` | `Path`, row `dict` | Creates parent folders, writes the header only when the file is new, appends one row |
@@ -122,7 +124,7 @@ Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `bu
 
 ## 6. `medifed/server_app.py` — Flower Server
 
-**Status: built in Phase 3a, federation run pending**
+**Status: built in Phase 3 Part 1, federation run pending**
 
 **Purpose:** Flower 1.36 `ServerApp` that runs plain FedAvg over the complete `state_dict` (weights and BatchNorm statistics), weighted by `num-examples`.
 
@@ -130,7 +132,7 @@ Each round the client: `set_seed(SEED + 1000 * hospital_id + server_round)`, `bu
 
 | Function | Inputs | Output |
 |---|---|---|
-| `main(grid, context)` | Flower `Grid`, `Context` | `None`. Reads `num-server-rounds` and `run-name` from `context.run_config`. After `set_seed(SEED)`, builds `build_model(pretrained=True)` and sends it as `ArrayRecord(model.state_dict())`. |
+| `main(grid, context)` | Flower `Grid`, `Context` | `None`. Reads `num-server-rounds`, `run-name`, `seed` and `mode` from `context.run_config`. It validates baseline mode, calls `set_seed(seed)`, builds `build_model(pretrained=True)` and sends it as `ArrayRecord(model.state_dict())`. |
 
 `FedAvg` is constructed with `fraction_train=1.0`, `fraction_evaluate=1.0`, `min_train_nodes=3`, `min_evaluate_nodes=3`, `min_available_nodes=3` (parameter names from `FedAvg.__init__` in flwr 1.36.0). `train_config` is `ConfigRecord({"lr": LEARNING_RATE})`. After `strategy.start`, the final weights `result.arrays.to_torch_state_dict()` are saved to `checkpoints/<run-name>_global.pt` and the process prints `FEDERATED RUN FINISHED: <run-name>`.
 

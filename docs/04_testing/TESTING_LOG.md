@@ -37,3 +37,8 @@
 | 2026-10-12 | 3a | TC-FED-005 | append_round_row writes the header exactly once and appends rows | 1 header + 2 data rows | Correct | PASS | |
 | 2026-10-12 | 3a | TC-FED-006 | client_app and server_app import and expose app | hasattr app | Both expose app | PASS | |
 | 2026-10-12 | 3a | TC-FED-007 | state_dict_to_cpu returns tensors that all live on cpu | device.type == cpu | cpu | PASS | |
+| 2026-10-13 | 3 Part 1 | TC-FED-008 | MEDIFED_DEVICE=cpu makes get_device return cpu | device.type == cpu | cpu | PASS | |
+| 2026-10-13 | 3 Part 1 | TC-FED-009 | Invalid MEDIFED_DEVICE value raises ValueError | ValueError | ValueError | PASS | |
+| 2026-10-13 | 3 Part 1 | TC-FED-010 | validate_mode accepts baseline and rejects an unallowed mode | baseline accepted; invalid mode raises ValueError | Expected behavior | PASS | |
+| 2026-10-13 | 3 Part 1 | TC-FED-011 | Start, stop and experiment PowerShell scripts parse without syntax errors | All three parse | All three printed syntax OK | PASS | |
+| 2026-10-13 | 3 Part 1 | TC-FED-012 | Round 1 removes an existing rounds CSV; later rounds preserve it | Round 1 removes; round 2 preserves | Expected behavior | PASS | |

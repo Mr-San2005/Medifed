@@ -58,7 +58,7 @@ MediFed/
 | 0 | Skeleton, config, test runner, documentation structure | Done |
 | 1 | Data pipeline (3 hospitals, filters, cap, verified counts) | Done |
 | 2 | ResNet18 4-class model and local training sanity check | Done |
-| 3 | Flower FedAvg baseline with 3 hospital clients | Not started |
+| 3 | Flower FedAvg baseline with 3 hospital clients | Implemented; federation run pending |
 | 4 | FedBN personalized mode and baseline vs personalized comparison | Not started |
 | 5 | Grad-CAM and multi-disease demo | Not started |
 | 6 | Web app (Dashboard and Diagnosis Page) | Not started |
@@ -94,6 +94,24 @@ Train local ResNet18 models at all three hospitals (saves checkpoints, prints me
 
 ```powershell
 python scripts/train_local.py
+```
+
+Start the Flower deployment windows (add `-Cpu` to force CPU on the SuperNodes):
+
+```powershell
+.\scripts\start_federation.ps1
+```
+
+After all three SuperNodes are ready, run the baseline seeds:
+
+```powershell
+.\scripts\run_experiments.ps1 -Mode baseline -Seeds 42,43,44
+```
+
+Stop the Flower processes and check their ports:
+
+```powershell
+.\scripts\stop_federation.ps1
 ```
 
 Test output is saved automatically to `docs/04_testing/test_runs/test_run_YYYYMMDD_HHMMSS.txt`.
