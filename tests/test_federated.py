@@ -1,9 +1,12 @@
 """Unit tests for federated helpers and app imports. CPU only; no Flower runtime."""
 
 import math
+import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -13,9 +16,11 @@ from medifed.federated import (
     append_round_row,
     local_update,
     partition_to_hospital,
+    reset_round_csv_for_first_round,
     state_dict_to_cpu,
+    validate_mode,
 )
-from medifed.model import build_model
+from medifed.model import build_model, get_device
 
 
 class TestResolveProjectRoot(unittest.TestCase):
@@ -118,6 +123,77 @@ class TestStateDictToCpu(unittest.TestCase):
                 "cpu",
                 f"{key} is on {tensor.device}, expected cpu",
             )
+
+
+class TestDeviceOverride(unittest.TestCase):
+
+    def test_cpu_override(self):
+        """TC-FED-008 MEDIFED_DEVICE=cpu makes get_device return cpu."""
+        with patch.dict(os.environ, {"MEDIFED_DEVICE": "cpu"}):
+            self.assertEqual(get_device(), torch.device("cpu"))
+
+    def test_invalid_override(self):
+        """TC-FED-009 an invalid MEDIFED_DEVICE value raises ValueError."""
+        with patch.dict(os.environ, {"MEDIFED_DEVICE": "tpu"}):
+            with self.assertRaises(ValueError):
+                get_device()
+
+
+class TestModeValidation(unittest.TestCase):
+
+    def test_validate_mode(self):
+        """TC-FED-010 validate_mode accepts baseline and rejects unallowed modes."""
+        self.assertEqual(validate_mode("baseline", ("baseline",)), "baseline")
+        with self.assertRaisesRegex(ValueError, "baseline"):
+            validate_mode("personalized", ("baseline",))
+
+
+class TestRoundCsvReset(unittest.TestCase):
+
+    def test_round_one_removes_previous_file(self):
+        """TC-FED-012 round 1 overwrites an existing rounds CSV."""
+        with tempfile.TemporaryDirectory() as tmp:
+            csv_path = Path(tmp) / "hospital1_rounds.csv"
+            csv_path.write_text("old rows", encoding="utf-8")
+            reset_round_csv_for_first_round(csv_path, 1)
+            self.assertFalse(csv_path.exists())
+
+            csv_path.write_text("current rows", encoding="utf-8")
+            reset_round_csv_for_first_round(csv_path, 2)
+            self.assertEqual(csv_path.read_text(encoding="utf-8"), "current rows")
+
+
+class TestPowerShellScripts(unittest.TestCase):
+
+    def test_phase_scripts_parse(self):
+        """TC-FED-011 the three federation PowerShell scripts parse without syntax errors."""
+        project_root = Path(__file__).resolve().parent.parent
+        script_names = (
+            "start_federation.ps1",
+            "stop_federation.ps1",
+            "run_experiments.ps1",
+        )
+        for script_name in script_names:
+            script_path = project_root / "scripts" / script_name
+            command = (
+                "$errors=$null; "
+                "[void][System.Management.Automation.Language.Parser]::ParseFile(" 
+                f"'{script_path}', [ref]$null, [ref]$errors); "
+                "if ($errors) { $errors | Format-List *; exit 1 } "
+                "else { Write-Output 'syntax OK' }"
+            )
+            result = subprocess.run(
+                ["powershell", "-NoProfile", "-Command", command],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            self.assertEqual(
+                result.returncode,
+                0,
+                f"{script_name}: {result.stdout}{result.stderr}",
+            )
+            self.assertIn("syntax OK", result.stdout)
 
 
 if __name__ == "__main__":
