@@ -18,14 +18,12 @@ app = ServerApp()
 
 @app.main()
 def main(grid: Grid, context: Context) -> None:
-    """Run plain FedAvg for num-server-rounds and save the final global weights."""
+    """Run FedAvg for the selected mode and save the final global weights."""
     num_rounds = int(context.run_config["num-server-rounds"])
     run_name = str(context.run_config["run-name"])
     seed = int(context.run_config["seed"])
     mode = str(context.run_config["mode"])
-    if mode == "personalized":
-        raise ValueError("personalized mode is added in Phase 4")
-    validate_mode(mode, ("baseline",))
+    validate_mode(mode, ("baseline", "personalized"))
 
     set_seed(seed)
     model = build_model(pretrained=True)

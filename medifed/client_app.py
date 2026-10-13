@@ -26,12 +26,19 @@ from medifed.federated import (
     validate_mode,
 )
 from medifed.model import build_model, get_device, set_seed
+from medifed.personalization import (
+    bn_keys,
+    bn_path,
+    merge_state,
+    prepare_local_bn,
+    save_bn_state,
+)
 from medifed.train import evaluate as evaluate_loader
 
 app = ClientApp()
 
 
-def _hospital_and_run(context: Context) -> tuple[int, str, int]:
+def _hospital_and_run(context: Context) -> tuple[int, str, int, str]:
     """Read the client identity and run settings from Flower context."""
     partition_id = int(context.node_config["partition-id"])
     hospital_id = partition_to_hospital(partition_id)
@@ -45,10 +52,8 @@ def _hospital_and_run(context: Context) -> tuple[int, str, int]:
     run_name = str(context.run_config["run-name"])
     seed = int(context.run_config["seed"])
     mode = str(context.run_config["mode"])
-    if mode == "personalized":
-        raise ValueError("personalized mode is added in Phase 4")
-    validate_mode(mode, ("baseline",))
-    return hospital_id, run_name, seed
+    validate_mode(mode, ("baseline", "personalized"))
+    return hospital_id, run_name, seed, mode
 
 
 def _rounds_csv(run_name: str, hospital_id: int):
@@ -70,7 +75,7 @@ def _server_round(msg: Message) -> int:
 @app.train()
 def train(msg: Message, context: Context) -> Message:
     """Run FL_LOCAL_EPOCHS of local training on this hospital's train set."""
-    hospital_id, run_name, seed = _hospital_and_run(context)
+    hospital_id, run_name, seed, mode = _hospital_and_run(context)
     server_round = _server_round(msg)
     config = msg.content["config"]
     lr = float(config["lr"]) if "lr" in config else LEARNING_RATE
@@ -82,8 +87,17 @@ def train(msg: Message, context: Context) -> Message:
     reset_round_csv_for_first_round(rounds_csv, server_round)
 
     model = _load_received_model(msg, device)
+    if mode == "personalized":
+        local_bn = prepare_local_bn(server_round, bn_path(run_name, hospital_id))
+        if local_bn is not None:
+            model.load_state_dict(merge_state(model.state_dict(), local_bn, bn_keys(model)))
+
     train_loader = make_loader(hospital_id, "train", BATCH_SIZE, shuffle=True)
     metrics = local_update(model, train_loader, FL_LOCAL_EPOCHS, lr, device)
+
+    if mode == "personalized":
+        local_bn_state = {key: model.state_dict()[key].clone() for key in bn_keys(model)}
+        save_bn_state(bn_path(run_name, hospital_id), local_bn_state)
 
     num_examples = len(train_loader.dataset)
     append_round_row(
@@ -118,11 +132,16 @@ def train(msg: Message, context: Context) -> Message:
 @app.evaluate()
 def evaluate(msg: Message, context: Context) -> Message:
     """Evaluate the received global model on this hospital's validation set."""
-    hospital_id, run_name, _ = _hospital_and_run(context)
+    hospital_id, run_name, _, mode = _hospital_and_run(context)
     server_round = _server_round(msg)
     device = get_device()
 
     model = _load_received_model(msg, device)
+    if mode == "personalized":
+        local_bn = prepare_local_bn(server_round, bn_path(run_name, hospital_id))
+        if local_bn is not None:
+            model.load_state_dict(merge_state(model.state_dict(), local_bn, bn_keys(model)))
+
     val_loader = make_loader(hospital_id, "val", BATCH_SIZE, shuffle=False)
     val_metrics = evaluate_loader(model, val_loader, device)
 
