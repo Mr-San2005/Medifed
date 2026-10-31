@@ -37,7 +37,7 @@ SEED = 42
 IMAGE_SIZE = 224
 
 # Per-class cap applied during data loading (keeps GPU memory and training time bounded).
-MAX_IMAGES_PER_CLASS = 500
+MAX_IMAGES_PER_CLASS: int | None = None
 
 # Fraction of each class held out for validation.
 VAL_FRACTION = 0.2
@@ -104,8 +104,8 @@ HOSPITALS = {
 # Local training hyperparameters.
 # Batch size of 16 keeps peak GPU memory well under 4 GB at 224×224.
 BATCH_SIZE = 16
-# 5 epochs is enough for a sanity check that the model learns from each hospital's data.
-LOCAL_EPOCHS = 5
+# Match the total local-pass budget of a 20-round federated run with one local epoch per round.
+LOCAL_EPOCHS = 20
 # 1e-4 is a conservative learning rate for fine-tuning a pretrained backbone.
 LEARNING_RATE = 1e-4
 
@@ -113,7 +113,7 @@ LEARNING_RATE = 1e-4
 FL_NUM_HOSPITALS = 3
 FL_NUM_ROUNDS = 10
 # One local epoch per round keeps each Flower round short on this machine.
-FL_LOCAL_EPOCHS = 1
+FL_LOCAL_EPOCHS = 3
 DEFAULT_RUN_NAME = "baseline_seed42"
 FL_SEEDS = (42, 43, 44)
 FL_MODES = ("baseline", "personalized")

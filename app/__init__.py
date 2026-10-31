@@ -1,0 +1,1 @@
+"""MediFed local dashboard and diagnosis application."""

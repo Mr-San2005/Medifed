@@ -8,7 +8,6 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Datasets and model weights (large; regenerate locally, never commit)
-# To share a final model deliberately, agree it as a team, then git add -f it.
 data/
 checkpoints/
 *.pt
@@ -22,7 +21,7 @@ checkpoints/
 .env
 kaggle.json
 
-# OS / editor junk (includes macOS AppleDouble files)
+# OS / editor junk
 .DS_Store
 ._*
 Thumbs.db
@@ -32,3 +31,9 @@ desktop.ini
 
 # Logs
 *.log
+
+# Auto-generated test run logs (too many to track individually)
+docs/04_testing/test_runs/*.txt
+
+# Internal AI agent working files (not for teammates)
+scripts/md_files/

@@ -12,7 +12,7 @@ Each section covers one planned module. Status is updated at the end of each pha
 
 **Contents:**
 - `PROJECT_ROOT`, `DATA_DIR`, `RAW_DIR`, `PROCESSED_DIR`, `CHECKPOINT_DIR`, `RESULTS_DIR` — `pathlib.Path` objects anchored to `__file__`.
-- `SEED`, `IMAGE_SIZE`, `MAX_IMAGES_PER_CLASS`, `VAL_FRACTION`, `IMAGE_EXTENSIONS` — scalar constants.
+- `SEED`, `IMAGE_SIZE`, `MAX_IMAGES_PER_CLASS` (`None`, meaning uncapped), `VAL_FRACTION`, `IMAGE_EXTENSIONS` — scalar configuration values.
 - `CLASS_NAMES`, `CLASS_TO_INDEX` — global class registry.
 - `EXCLUDE_FOLDER_NAMES` — folders never treated as class folders (`masks`, `Lung_Opacity`, `__MACOSX`).
 - `HOSPITAL_RAW_DIRS` — maps hospital ID (1/2/3) to its raw data path.
@@ -140,18 +140,19 @@ Each round the client: `set_seed(seed + 1000 * hospital_id + server_round)`, `bu
 
 ## 7. `medifed/personalization.py` — FedBN Logic
 
-**Status: Phase 4 — Planned**
+**Status: Phase 4 — Built; saved seed-42 run evaluated**
 
-**Purpose:** Utilities for separating BatchNorm parameters from the rest of the model state dict, and for saving/loading per-hospital BatchNorm checkpoints between rounds.
+**Purpose:** Utilities for separating BatchNorm parameters from the shared model state, merging hospital-local BatchNorm state, and persisting it between client rounds.
 
 **Planned functions:**
 
 | Function | Inputs | Output |
 |---|---|---|
-| `split_state_dict(state_dict)` | Full model state dict | `(shared_dict, bn_dict)` |
-| `merge_state_dict(shared_dict, bn_dict)` | Two partial dicts | Full state dict |
-| `save_bn_state(bn_dict, hospital_id)` | BN state dict, hospital ID | Writes to `checkpoints/bn_hospital{id}.pt` |
-| `load_bn_state(hospital_id)` | Hospital ID | BN state dict or `None` if not found |
+| `bn_keys(model)` | Model | Sorted state keys for BatchNorm modules |
+| `split_state(state_dict, keys)` | Full model state and BN keys | `(shared_state, local_bn_state)` |
+| `merge_state(global_state, local_bn, keys)` | Global state, local BN state, BN keys | Merged full state; raises if BN entries are missing |
+| `save_bn_state(path, state_dict)` / `load_bn_state(path)` | Path and state | Persisted local BatchNorm state |
+| `prepare_local_bn(server_round, path)` | Round and path | Removes stale round-1 file or loads saved BN state |
 
 ---
 
@@ -172,7 +173,7 @@ Each round the client: `set_seed(seed + 1000 * hospital_id + server_round)`, `bu
 
 ## 9. `medifed/gradcam.py` — Grad-CAM Explainability
 
-**Status: Phase 5 — Planned**
+**Status: Phase 5 — Built**
 
 **Purpose:** Generate a Grad-CAM heatmap for the top prediction of a single image using PyTorch hooks.
 
@@ -180,19 +181,22 @@ Each round the client: `set_seed(seed + 1000 * hospital_id + server_round)`, `bu
 
 | Function | Inputs | Output |
 |---|---|---|
-| `compute_gradcam(model, image_tensor, target_class)` | Model, `(1,3,H,W)` tensor, class index | `(H,W)` numpy heatmap in `[0,1]` |
-| `overlay_heatmap(image_pil, heatmap)` | PIL image, numpy heatmap | PIL image with coloured overlay |
+| `gradcam(model, image_tensor, target_class=None, device=None)` | Model, `(1,3,H,W)` tensor, optional class/device | `(H,W)` NumPy heatmap in `[0,1]`, probabilities, target index |
+| `colormap(values)` | Normalized NumPy heatmap | RGB uint8 array, blue/cyan/yellow/red |
+| `overlay(image, cam, alpha=0.45)` | PIL image, NumPy heatmap, blend amount | RGB PIL overlay |
 
 ---
 
 ## 10. `app/` — Web Application
 
-**Status: Phase 6 — Planned**
+**Status: Phase 6 — Implemented; local browser review pending**
 
-**Purpose:** Local Flask web app with two pages: Dashboard and Diagnosis Page.
+**Purpose:** Loopback-only FastAPI application with a results dashboard and an in-memory image diagnosis workflow.
 
-**Planned modules:**
-- `app/app.py` — Flask routes.
-- `app/templates/dashboard.html` — per-hospital training curves and final metrics.
-- `app/templates/diagnosis.html` — upload form, ranked predictions, heatmap overlay.
-- `app/static/` — CSS (design tokens from `UI_DESIGN_GUIDE.md`), minimal JS.
+**Modules and endpoints:**
+- `app/server.py` serves `/`, `/diagnose`, `/api/health`, `/api/results`, `/api/variants`, and `/api/predict` on the launcher-provided local server.
+- `app/services.py` aggregates saved CSV results and calls `medifed.inference.predict`.
+- `app/static/` contains offline HTML/CSS/JavaScript for comparison and round charts, checkpoint selection, ranked predictions, and Grad-CAM opacity control.
+- Prediction request bodies are capped at 10 MiB, processed in memory, and returned with `Cache-Control: no-store`; error responses distinguish invalid image, unknown variant, missing checkpoint, and oversized request.
+
+**Run:** `scripts/run_app.ps1`, then open `http://127.0.0.1:8000`. Keep the research-prototype notice visible; outputs are not for clinical use.

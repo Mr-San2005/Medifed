@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediFed — Diagnosis</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d6b6e'/%3E%3Cpath d='M16 7v18M7 16h18' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/diagnose.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-mark">M</span>
+      <span>MediFed<span class="brand-sub">Federated Learning · Chest X-ray</span></span>
+    </a>
+    <nav>
+      <a class="nav-link" href="/">Results</a>
+      <a class="nav-link active" href="/diagnose">Diagnosis</a>
+    </nav>
+  </header>
+
+  <main class="page-shell diagnosis-shell">
+    <div class="page-heading">
+      <h1>Image Diagnosis</h1>
+      <p>Select a model checkpoint and upload a chest X-ray to run inference with Grad-CAM visualization.</p>
+    </div>
+
+    <form id="diagnosis-form" class="diagnosis-form">
+      <div class="field-block">
+        <label for="variant-select">Model variant</label>
+        <select id="variant-select" name="variant" required>
+          <option value="">Loading variants…</option>
+        </select>
+      </div>
+      <div class="field-block">
+        <label for="image-file">Chest X-ray image</label>
+        <input id="image-file" name="image" type="file" accept="image/*" required>
+      </div>
+      <button id="analyze-button" class="button button-primary" type="submit" disabled>
+        Analyze
+      </button>
+    </form>
+
+    <p id="diagnosis-error" class="error-message" role="alert"></p>
+
+    <section id="diagnosis-output" class="diagnosis-output" hidden aria-live="polite">
+      <div class="results-heading">
+        <h2 id="prediction-title">—</h2>
+        <span id="inference-time" class="inference-badge"></span>
+      </div>
+      <div class="results-layout">
+        <div class="ranked-panel">
+          <h3>Class probabilities</h3>
+          <ol id="ranked-results" class="ranked-results"></ol>
+        </div>
+        <div class="preview-panel">
+          <div class="preview-header">
+            <h3>Grad-CAM overlay</h3>
+            <label for="opacity-range">
+              Opacity <output id="opacity-value">50%</output>
+            </label>
+          </div>
+          <div class="heatmap-legend">
+            <span>Low</span>
+            <span class="legend-spectrum"></span>
+            <span>High</span>
+          </div>
+          <div class="image-stage">
+            <img id="original-image" alt="Input chest X-ray">
+            <img id="heatmap-image" alt="Grad-CAM activation map">
+          </div>
+          <input id="opacity-range" class="opacity-range" type="range" min="0" max="100" value="50" aria-label="Overlay opacity">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>MediFed · Federated Learning Research</span>
+    <span>ResNet18 · Flower · PyTorch</span>
+  </footer>
+</body>
+</html>

@@ -1,11 +1,16 @@
-"""Summarize baseline federated runs and write comparison CSVs."""
+"""Summarize federated runs and write comparison CSVs."""
 
 from __future__ import annotations
 
 import csv
 import re
+import sys
 from pathlib import Path
 from statistics import mean, pstdev
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from medifed.config import RESULTS_DIR, RUNS_DIR, HOSPITALS
 
@@ -96,8 +101,8 @@ def build_summary(runs_dir: str | Path = RUNS_DIR) -> dict:
                 rows = _read_round_rows(csv_path)
                 if not rows:
                     continue
-                last_val = max(rows, key=lambda item: item["round"])
-                seed_values.append(last_val["accuracy"])
+                best_val = max(rows, key=lambda item: item["accuracy"])
+                seed_values.append(best_val["accuracy"])
             if seed_values:
                 summary_final.append(
                     {
@@ -135,8 +140,8 @@ def build_summary(runs_dir: str | Path = RUNS_DIR) -> dict:
                 rows = _read_round_rows(csv_path)
                 if not rows:
                     continue
-                last_val = max(rows, key=lambda item: item["round"])
-                seed_accs.append(last_val["accuracy"])
+                best_val = max(rows, key=lambda item: item["accuracy"])
+                seed_accs.append(best_val["accuracy"])
             if seed_accs:
                 all_values_by_seed.append(mean(seed_accs))
         if all_values_by_seed:
@@ -179,25 +184,25 @@ def build_summary(runs_dir: str | Path = RUNS_DIR) -> dict:
             rows = _read_round_rows(csv_path)
             if not rows:
                 continue
-            last_val = max(rows, key=lambda item: item["round"])
+            best_val = max(rows, key=lambda item: item["accuracy"])
             if mode == "baseline":
-                fedavg_values.append(last_val["accuracy"])
-                fedavg_by_seed[seed] = last_val["accuracy"]
+                fedavg_values.append(best_val["accuracy"])
+                fedavg_by_seed[seed] = best_val["accuracy"]
                 comparison_seed_rows.append(
                     {
                         "seed": seed,
                         "hospital": hospital_id,
-                        "fedavg_acc": last_val["accuracy"],
+                        "fedavg_acc": best_val["accuracy"],
                         "fedbn_acc": "",
                         "diff": "",
                     }
                 )
             elif mode == "personalized":
-                fedbn_values.append(last_val["accuracy"])
+                fedbn_values.append(best_val["accuracy"])
                 for entry in comparison_seed_rows:
                     if entry["seed"] == seed and entry["hospital"] == hospital_id:
-                        entry["fedbn_acc"] = last_val["accuracy"]
-                        entry["diff"] = float(last_val["accuracy"]) - float(entry["fedavg_acc"]) if entry["fedavg_acc"] != "" else ""
+                        entry["fedbn_acc"] = best_val["accuracy"]
+                        entry["diff"] = float(best_val["accuracy"]) - float(entry["fedavg_acc"]) if entry["fedavg_acc"] != "" else ""
         fedavg_mean = mean(fedavg_values) if fedavg_values else ""
         fedbn_mean = mean(fedbn_values) if fedbn_values else ""
         fedavg_std = pstdev(fedavg_values) if len(fedavg_values) > 1 else 0.0 if fedavg_values else ""
@@ -255,7 +260,7 @@ def build_comparison_table(local_file: str | Path | None, fedavg_runs: list, fed
                 rows_for_hospital = _read_round_rows(csv_path)
                 if not rows_for_hospital:
                     continue
-                values.append(max(rows_for_hospital, key=lambda item: item["round"])["accuracy"])
+                values.append(max(rows_for_hospital, key=lambda item: item["accuracy"])["accuracy"])
             if values:
                 fedavg_mean = mean(values)
                 fedavg_std = pstdev(values) if len(values) > 1 else 0.0
@@ -269,7 +274,7 @@ def build_comparison_table(local_file: str | Path | None, fedavg_runs: list, fed
                 rows_for_hospital = _read_round_rows(csv_path)
                 if not rows_for_hospital:
                     continue
-                values.append(max(rows_for_hospital, key=lambda item: item["round"])["accuracy"])
+                values.append(max(rows_for_hospital, key=lambda item: item["accuracy"])["accuracy"])
             if values:
                 fedbn_mean = mean(values)
                 fedbn_std = pstdev(values) if len(values) > 1 else 0.0
@@ -289,6 +294,39 @@ def build_comparison_table(local_file: str | Path | None, fedavg_runs: list, fed
             }
         )
     return rows
+
+
+def write_last5_rounds_accuracy(results_dir: str | Path = RESULTS_DIR, runs_dir: str | Path = RUNS_DIR) -> Path:
+    """Write the validation accuracy for rounds 6-10 for each mode and hospital."""
+    results_dir = Path(results_dir)
+    runs_dir = Path(runs_dir)
+    rows: list[dict] = []
+    for run_dir in sorted(runs_dir.iterdir()):
+        if not run_dir.is_dir():
+            continue
+        try:
+            mode, _seed = parse_run_name(run_dir.name)
+        except ValueError:
+            continue
+        for hospital_id in sorted(HOSPITALS):
+            csv_path = run_dir / f"hospital{hospital_id}_rounds.csv"
+            if not csv_path.exists():
+                continue
+            rows_for_hospital = _read_round_rows(csv_path)
+            for row in rows_for_hospital:
+                if 6 <= int(row["round"]) <= 10 and row["split"] == "val":
+                    rows.append({
+                        "mode": mode,
+                        "hospital": hospital_id,
+                        "round": int(row["round"]),
+                        "val_accuracy": float(row["accuracy"]),
+                    })
+    out_path = results_dir / "last5_rounds_val_accuracy.csv"
+    with open(out_path, "w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["mode", "hospital", "round", "val_accuracy"])
+        writer.writeheader()
+        writer.writerows(sorted(rows, key=lambda item: (item["mode"], item["hospital"], item["round"])))
+    return out_path
 
 
 def write_summary_files(results_dir: str | Path = RESULTS_DIR, runs_dir: str | Path = RUNS_DIR) -> dict:
@@ -331,6 +369,7 @@ def write_summary_files(results_dir: str | Path = RESULTS_DIR, runs_dir: str | P
         writer.writeheader()
         writer.writerows(summary["comparison_per_seed"])
 
+    write_last5_rounds_accuracy(results_dir, runs_dir)
     return summary
 
 

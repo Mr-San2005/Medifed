@@ -1,5 +1,6 @@
 """Unit tests for federated helpers and app imports. CPU only; no Flower runtime."""
 
+import csv
 import math
 import os
 import subprocess
@@ -17,6 +18,7 @@ from medifed.federated import (
     local_update,
     partition_to_hospital,
     reset_round_csv_for_first_round,
+    run_is_complete,
     state_dict_to_cpu,
     validate_mode,
 )
@@ -163,6 +165,44 @@ class TestRoundCsvReset(unittest.TestCase):
             self.assertEqual(csv_path.read_text(encoding="utf-8"), "current rows")
 
 
+class TestRunCompletion(unittest.TestCase):
+
+    def test_run_is_complete(self):
+        """TC-FED-013 complete runs have a checkpoint and 2 * rounds rows per hospital."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "baseline_seed42"
+            run_dir.mkdir()
+            checkpoint = Path(tmp) / "baseline_seed42_global.pt"
+            checkpoint.write_bytes(b"stub")
+            for hospital_id in (1, 2, 3):
+                rows = []
+                for round_id in range(1, 11):
+                    rows.append({
+                        "round": round_id,
+                        "hospital": hospital_id,
+                        "split": "train",
+                        "loss": 1.0,
+                        "accuracy": 0.8,
+                        "num_samples": 3,
+                    })
+                    rows.append({
+                        "round": round_id,
+                        "hospital": hospital_id,
+                        "split": "val",
+                        "loss": 0.9,
+                        "accuracy": 0.7,
+                        "num_samples": 2,
+                    })
+                with open(run_dir / f"hospital{hospital_id}_rounds.csv", "w", newline="", encoding="utf-8") as handle:
+                    writer = csv.DictWriter(handle, fieldnames=["round", "hospital", "split", "loss", "accuracy", "num_samples"])
+                    writer.writeheader()
+                    writer.writerows(rows)
+            self.assertTrue(run_is_complete(run_dir, checkpoint, rounds=10, hospitals=3))
+
+            (run_dir / "hospital1_rounds.csv").unlink()
+            self.assertFalse(run_is_complete(run_dir, checkpoint, rounds=10, hospitals=3))
+
+
 class TestPowerShellScripts(unittest.TestCase):
 
     def test_phase_scripts_parse(self):
@@ -194,6 +234,26 @@ class TestPowerShellScripts(unittest.TestCase):
                 f"{script_name}: {result.stdout}{result.stderr}",
             )
             self.assertIn("syntax OK", result.stdout)
+
+    def test_run_experiments_script_parse(self):
+        """TC-FED-014 the review-2 launcher script parses as valid PowerShell."""
+        project_root = Path(__file__).resolve().parent.parent
+        script_path = project_root / "scripts" / "run_experiments.ps1"
+        command = (
+            "$errors=$null; "
+            "[void][System.Management.Automation.Language.Parser]::ParseFile(" 
+            f"'{script_path}', [ref]$null, [ref]$errors); "
+            "if ($errors) { $errors | Format-List *; exit 1 } "
+            "else { Write-Output 'syntax OK' }"
+        )
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", command],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("syntax OK", result.stdout)
 
 
 if __name__ == "__main__":

@@ -68,7 +68,8 @@ def main() -> None:
         print(f"  excluded folder:  {skipped['excluded']}")
         print(f"  unreadable (PIL): {skipped['unreadable']}")
 
-        print(f"\nPer-class counts (cap={MAX_IMAGES_PER_CLASS}):")
+        cap_label = MAX_IMAGES_PER_CLASS if MAX_IMAGES_PER_CLASS is not None else "none"
+        print(f"\nPer-class counts (cap={cap_label}):")
         print(f"  {'Class':<16} {'Found':>6} {'Kept':>6}")
         print(f"  {'-'*30}")
 
@@ -76,7 +77,7 @@ def main() -> None:
             if cls not in images_by_class:
                 continue
             found = len(images_by_class[cls])
-            kept  = min(found, MAX_IMAGES_PER_CLASS)
+            kept = found if MAX_IMAGES_PER_CLASS is None else min(found, MAX_IMAGES_PER_CLASS)
             print(f"  {cls:<16} {found:>6} {kept:>6}")
 
         # Build and save the manifest.
@@ -93,7 +94,7 @@ def main() -> None:
             if cls not in images_by_class:
                 continue
             found = len(images_by_class[cls])
-            kept  = min(found, MAX_IMAGES_PER_CLASS)
+            kept = found if MAX_IMAGES_PER_CLASS is None else min(found, MAX_IMAGES_PER_CLASS)
             train_n = sum(1 for r in rows if r["class_name"] == cls and r["split"] == "train")
             val_n   = sum(1 for r in rows if r["class_name"] == cls and r["split"] == "val")
             print(f"  {cls:<16} {train_n:>6} {val_n:>6}")

@@ -156,6 +156,17 @@ class TestBuildManifest(unittest.TestCase):
         for cls, count in counts.items():
             self.assertLessEqual(count, 2, f"Class {cls} has {count} rows, cap is 2")
 
+    def test_no_cap_keeps_all_eligible_images(self):
+        """TC-DATA-013: a None cap keeps every eligible image in each class."""
+        from collections import Counter
+        from medifed.data import build_manifest
+
+        rows = build_manifest(self._images(), self.tmp, cap=None)
+        counts = Counter(row["class_name"] for row in rows)
+        self.assertEqual(counts["NORMAL"], 1)
+        self.assertEqual(counts["TUBERCULOSIS"], 3)
+        self.assertEqual(counts["COVID19"], 1)
+
     def test_same_seed_same_sample(self):
         """TC-DATA-008: the same seed produces an identical sample on two calls."""
         from medifed.data import build_manifest

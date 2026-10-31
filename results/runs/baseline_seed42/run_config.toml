@@ -1,0 +1,4 @@
+seed = 42
+mode = "baseline"
+run-name = "baseline_seed42"
+num-server-rounds = 10

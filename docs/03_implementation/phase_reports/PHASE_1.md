@@ -7,7 +7,7 @@
 
 ## Objective
 
-Build the complete data pipeline for all three hospitals: walk raw directories, apply all filters (junk, extension, excluded folders, corrupt files), cap each class to 500 images with a fixed seed, split into train/val, write manifests, and expose the data through a PyTorch Dataset and DataLoader. Verify the pipeline end-to-end with a batch load and a saved sample grid.
+Build the complete data pipeline for all three hospitals: walk raw directories, apply all filters (junk, extension, excluded folders, corrupt files), use every valid image, split into train/val with a fixed seed, write manifests, and expose the data through a PyTorch Dataset and DataLoader. Verify the pipeline end-to-end with a batch load and a saved sample grid.
 
 ---
 

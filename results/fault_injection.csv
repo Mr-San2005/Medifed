@@ -1,0 +1,9 @@
+fault,status,failing_tests
+global-order-change,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)
+merge-local-bn-from-global,CAUGHT,FAIL: test_merge_state_keeps_local_bn (tests.test_personalization.TestFedBNHelpers.test_merge_state_keeps_local_bn)
+remove-junk-filter,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)
+cap-off-by-one,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)
+partition-swap,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)
+skip-bn-key-check,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)
+drop-round-reset,CAUGHT,FAIL: test_round_one_removes_previous_file (tests.test_federated.TestRoundCsvReset.test_round_one_removes_previous_file)
+validation-fraction-twice,CAUGHT,FAIL: test_run_experiments_script_parse (tests.test_federated.TestPowerShellScripts.test_run_experiments_script_parse)

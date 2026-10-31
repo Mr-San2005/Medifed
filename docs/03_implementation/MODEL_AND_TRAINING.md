@@ -2,7 +2,7 @@
 
 ## Model Choice and Transfer Learning
 
-The model is a ResNet18 pretrained on ImageNet. Transfer learning is used because each hospital's local dataset is small (at most 500 images per class after the cap), which is insufficient to train a deep convolutional network from scratch without overfitting. The pretrained backbone provides a strong feature extractor for visual patterns; only the final fully-connected layer is replaced and the entire network is fine-tuned.
+The model is a ResNet18 pretrained on ImageNet. Transfer learning is used because each hospital's dataset remains limited compared with the scale of a deep convolutional model. The pipeline now uses every valid local image rather than truncating classes at a fixed cap. The pretrained backbone provides a feature extractor for visual patterns; only the final fully-connected layer is replaced and the entire network is fine-tuned.
 
 ResNet18 is chosen over larger variants (ResNet50, VGG) because it fits comfortably within the 4 GB GPU memory budget at batch size 16 and 224 × 224 resolution, and its residual connections make it stable to fine-tune.
 
@@ -24,7 +24,7 @@ Every hospital uses this same 4-class head. A hospital that does not have a part
 | Parameter | Value | Reason |
 |---|---|---|
 | `BATCH_SIZE` | 16 | Keeps peak GPU memory under 4 GB at 224 × 224 |
-| `LOCAL_EPOCHS` | 5 | Enough to confirm the model learns from each hospital's data; full convergence is not the goal at this phase |
+| `LOCAL_EPOCHS` | 20 | Matches 20 federated rounds with one local epoch per round for a comparable training-pass budget |
 | `LEARNING_RATE` | 1e-4 | Conservative rate for fine-tuning a pretrained backbone; avoids destroying pretrained features |
 | `SEED` | 42 | Fixed for reproducibility of weight initialisation and data shuffling |
 | Optimiser | Adam | Adaptive learning rates per parameter; well-suited to fine-tuning |

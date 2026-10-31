@@ -43,7 +43,7 @@ MediFed trains a shared ResNet18 model without centralizing patient images, comp
 |---|---|
 | FR-01 | The data pipeline loads images from all three hospital folders, skipping files whose name starts with `._`, skipping folders named `masks` (any case), `Lung_Opacity` or `__MACOSX`, and skipping any file that PIL cannot open. |
 | FR-02 | One fixed global class mapping `CLASS_NAMES = ["COVID19","NORMAL","PNEUMONIA","TUBERCULOSIS"]` is defined in `medifed/config.py` and used identically by all hospitals. No hospital builds its own mapping. |
-| FR-03 | The data pipeline applies a reproducible per-class cap (`MAX_IMAGES_PER_CLASS = 500`) using a fixed random seed (`SEED = 42`). |
+| FR-03 | The data pipeline uses every valid image found in each hospital/class folder and creates a reproducible split using the fixed random seed (`SEED = 42`). |
 | FR-04 | Each hospital trains a ResNet18 with the final layer replaced for 4-class output, using only its local images. |
 | FR-05 | Federated training runs in FedAvg (baseline) mode: all model layers are averaged across hospitals each round. |
 | FR-06 | Federated training runs in FedBN (personalized) mode: BatchNorm layers remain local to each hospital; all other layers are averaged. |

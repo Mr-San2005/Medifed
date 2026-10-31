@@ -7,6 +7,11 @@ out of this module means the helpers can be tested without the deployment runtim
 import csv
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
+
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -85,3 +90,26 @@ def append_round_row(csv_path: Path, row_dict: dict) -> None:
         if write_header:
             writer.writeheader()
         writer.writerow({field: row_dict[field] for field in ROUND_CSV_FIELDS})
+
+
+def run_is_complete(run_dir: str | Path, checkpoint_path: str | Path, rounds: int, hospitals: int = 3) -> bool:
+    """Return True only when the run has both the final checkpoint and all round CSVs.
+
+    Success is based on real files, not just on a log message. Each hospital
+    should contain exactly 2 * rounds validation/training rows once the run has
+    completed.
+    """
+    run_dir = Path(run_dir)
+    checkpoint = Path(checkpoint_path)
+    if not checkpoint.exists() or not run_dir.exists():
+        return False
+
+    for hospital_id in range(1, hospitals + 1):
+        rounds_path = run_dir / f"hospital{hospital_id}_rounds.csv"
+        if not rounds_path.exists():
+            return False
+        with open(rounds_path, newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        if len(rows) != 2 * rounds:
+            return False
+    return True

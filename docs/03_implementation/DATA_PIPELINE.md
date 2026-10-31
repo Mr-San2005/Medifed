@@ -59,9 +59,9 @@ Each hospital's folder names are mapped to this global order via `FOLDER_TO_CLAS
 
 ## Cap and Split Policy
 
-- Per-class cap: `MAX_IMAGES_PER_CLASS = 500`. If a class has more images, a random sample of 500 is taken using `random.Random(SEED=42)`. The sample is reproducible.
+- Per-class cap: none. Every valid image discovered in each class is used before the deterministic train/validation split.
 - Train/val split: `VAL_FRACTION = 0.2`. Applied per class (stratified). The same `random.Random(SEED=42)` instance is used, so the split is also reproducible.
-- Typical split for a capped class of 500: 400 train, 100 val.
+- Train/validation counts are computed from the full valid class count; no image cap is applied.
 
 ---
 

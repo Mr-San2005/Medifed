@@ -95,7 +95,7 @@ def find_images(raw_dir: Path, folder_to_class: dict) -> tuple[dict, dict]:
 def build_manifest(
     images_by_class: dict,
     raw_dir: Path,
-    cap: int = MAX_IMAGES_PER_CLASS,
+    cap: int | None = MAX_IMAGES_PER_CLASS,
     val_fraction: float = VAL_FRACTION,
     seed: int = SEED,
 ) -> list[dict]:
@@ -109,7 +109,7 @@ def build_manifest(
 
     for class_name, paths in sorted(images_by_class.items()):
         # Cap: sample at most `cap` images per class using the fixed seed.
-        kept = paths if len(paths) <= cap else rng.sample(paths, cap)
+        kept = paths if cap is None or len(paths) <= cap else rng.sample(paths, cap)
         kept = sorted(kept)  # sort after sample for determinism
 
         # Stratified split: shuffle then cut at val_fraction boundary.
