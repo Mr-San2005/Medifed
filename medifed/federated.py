@@ -22,13 +22,16 @@ ROUND_CSV_FIELDS = ["round", "hospital", "split", "loss", "accuracy", "num_sampl
 
 
 def partition_to_hospital(partition_id: int) -> int:
-    """Map Flower partition-id (0, 1, 2) to hospital id (1, 2, 3)."""
-    mapping = {0: 1, 1: 2, 2: 3}
-    if partition_id not in mapping:
+    """Map Flower partition-id (0-based) to hospital id (1-based).
+
+    Dynamic: supports any number of hospitals up to FL_NUM_HOSPITALS.
+    """
+    from medifed.config import FL_NUM_HOSPITALS
+    if not (0 <= partition_id < FL_NUM_HOSPITALS):
         raise ValueError(
-            f"partition_id must be 0, 1 or 2, got {partition_id!r}"
+            f"partition_id must be 0..{FL_NUM_HOSPITALS - 1}, got {partition_id!r}"
         )
-    return mapping[partition_id]
+    return partition_id + 1
 
 
 def validate_mode(mode: str, allowed: tuple[str, ...]) -> str:

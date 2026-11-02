@@ -2,16 +2,26 @@
 
 ## 1. Purpose
 
-This document specifies the functional and non-functional requirements for MediFed, a federated learning system for chest X-ray diagnosis across three simulated hospitals. It is the authoritative reference for design, implementation and testing decisions.
+This document specifies the functional and non-functional requirements for MediFed, a privacy-preserving distributed AI system that enables multiple hospitals to collaboratively train medical diagnosis models without sharing sensitive patient data. It is the authoritative reference for design, implementation and testing decisions.
 
 ## 2. Scope
 
-MediFed trains a shared ResNet18 model without centralizing patient images, compares FedAvg (baseline) against FedBN (personalized) federated strategies, and exposes results through a local web application with a Dashboard and a Diagnosis Page.
+MediFed trains a shared ResNet18 model across three simulated hospitals without centralizing patient images. Local AI agents at each hospital train on their own data and send only model parameters to a central aggregation server, which combines updates using Federated Averaging (FedAvg). A personalized variant (FedBN) is also implemented and compared against the baseline. Results are exposed through a local web application with a Dashboard and a Diagnosis Page.
 
-## 3. Users
+## 3. Objectives
+
+- Build a privacy-preserving distributed AI system for collaborative medical diagnosis without sharing patient data.
+- Improve disease prediction accuracy through federated collaboration while maintaining complete data privacy.
+- Enable decentralized intelligence: hospitals contribute local knowledge to a shared global model without violating healthcare data regulations.
+- Implement local AI agents that train models directly on hospital data without moving patient records.
+- Implement a central aggregation server using FedAvg for combining model updates.
+- Compare FedAvg (baseline) against FedBN (personalized) to quantify the benefit of per-hospital BatchNorm adaptation.
+- Provide a Grad-CAM explainability heatmap for every prediction.
+
+## 4. Users
 
 - Project team members running training and evaluation locally.
-- Project guide reviewing results at each phase review.
+- Project guide (Pradeep HS, Assistant Professor) reviewing results at each phase review.
 - Demonstration audience at the final presentation.
 
 ## 4. Constraints

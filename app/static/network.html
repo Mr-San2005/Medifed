@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MediFed — Architecture</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d6b6e'/%3E%3Cpath d='M16 7v18M7 16h18' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script defer src="/static/js/network.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/">
+      <span class="brand-mark">M</span>
+      <span>MediFed<span class="brand-sub">Privacy-Preserving Medical AI</span></span>
+    </a>
+    <nav>
+      <a class="nav-link" href="/">Dashboard</a>
+      <a class="nav-link active" href="/network">Architecture</a>
+      <a class="nav-link" href="/diagnose">Diagnosis</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <div class="page-heading">
+      <h1>Federation Architecture</h1>
+      <p>Each hospital trains locally. Only model weights reach the server — no patient images ever leave a hospital.</p>
+    </div>
+
+    <section class="metric-strip" aria-label="Network summary">
+      <div class="metric-cell">
+        <span class="metric-label">Hospital nodes</span>
+        <strong id="net-hospital-count">—</strong>
+        <span class="metric-note">local AI agents</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-label">Training images</span>
+        <strong id="net-train-count">—</strong>
+        <span class="metric-note">stay local, never shared</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-label">Federated rounds</span>
+        <strong id="net-round-count">—</strong>
+        <span class="metric-note">completed</span>
+      </div>
+      <div class="metric-cell metric-emphasis">
+        <span class="metric-label">Aggregation strategy</span>
+        <strong>FedAvg · FedBN</strong>
+        <span class="metric-note">compared side-by-side</span>
+      </div>
+    </section>
+
+    <section class="section-block" aria-labelledby="arch-title">
+      <div class="section-heading">
+        <h2 id="arch-title">Federation Topology</h2>
+        <span class="unit-label">One round: broadcast → local train → aggregate</span>
+      </div>
+      <div class="arch-canvas" id="arch-canvas"></div>
+    </section>
+
+    <section class="section-block" aria-labelledby="nodes-title">
+      <div class="section-heading">
+        <h2 id="nodes-title">Hospital Nodes</h2>
+        <span class="unit-label">Each node is an independent local AI agent</span>
+      </div>
+      <div id="node-grid" class="node-grid">
+        <p class="empty-state">Loading…</p>
+      </div>
+    </section>
+
+    <p id="network-error" class="error-message" role="status"></p>
+  </main>
+
+  <footer class="site-footer">
+    <span>MediFed · Federated Learning Research</span>
+    <span>NIE · ISE · 2025–26</span>
+  </footer>
+</body>
+</html>

@@ -10,7 +10,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.services import available_variants, load_results, run_prediction
-from medifed.config import PROJECT_ROOT
+from medifed.config import HOSPITALS, PROJECT_ROOT
 
 
 APP_DIR = Path(__file__).resolve().parent
@@ -36,6 +36,11 @@ async def dashboard():
 @app.get("/diagnose")
 async def diagnosis_page():
     return FileResponse(STATIC_DIR / "diagnose.html")
+
+
+@app.get("/network")
+async def network_page():
+    return FileResponse(STATIC_DIR / "network.html")
 
 
 @app.get("/api/health")
@@ -78,8 +83,8 @@ async def predict(request: Request, variant: str):
 
     known_variants = {
         "fedavg_global",
-        *(f"fedbn_hospital{hospital_id}" for hospital_id in (1, 2, 3)),
-        *(f"local_hospital{hospital_id}" for hospital_id in (1, 2, 3)),
+        *(f"fedbn_hospital{h}" for h in HOSPITALS),
+        *(f"local_hospital{h}" for h in HOSPITALS),
     }
     if variant not in known_variants:
         return JSONResponse({"error": f"Unknown model variant: {variant}"}, status_code=404, headers=response_headers)

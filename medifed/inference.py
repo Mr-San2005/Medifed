@@ -10,7 +10,7 @@ from time import perf_counter
 import torch
 from PIL import Image, UnidentifiedImageError
 
-from medifed.config import CHECKPOINT_DIR, CLASS_NAMES
+from medifed.config import CHECKPOINT_DIR, CLASS_NAMES, HOSPITALS
 from medifed.data import get_transforms
 from medifed.gradcam import gradcam, overlay
 from medifed.model import build_model, get_device
@@ -24,12 +24,12 @@ def list_variants(checkpoint_dir: str | Path = CHECKPOINT_DIR) -> list[str]:
     if (checkpoint_dir / "baseline_seed42_global.pt").is_file():
         available.append("fedavg_global")
     personalized = checkpoint_dir / "personalized_seed42_global.pt"
-    for hospital_id in (1, 2, 3):
+    for hospital_id in HOSPITALS:
         if personalized.is_file() and (
             checkpoint_dir / "personalized_seed42" / f"hospital{hospital_id}_bn.pt"
         ).is_file():
             available.append(f"fedbn_hospital{hospital_id}")
-    for hospital_id in (1, 2, 3):
+    for hospital_id in HOSPITALS:
         if (checkpoint_dir / f"local_hospital{hospital_id}.pt").is_file():
             available.append(f"local_hospital{hospital_id}")
     return available
@@ -43,7 +43,7 @@ def _load_state(path: Path) -> dict[str, torch.Tensor]:
 
 def _hospital_id(name: str, prefix: str) -> int:
     suffix = name.removeprefix(prefix)
-    if suffix not in {"1", "2", "3"}:
+    if suffix not in {str(h) for h in HOSPITALS}:
         raise ValueError(f"Unknown variant: {name}")
     return int(suffix)
 

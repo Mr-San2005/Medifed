@@ -1,12 +1,22 @@
 "use strict";
 
-const fileInput = document.getElementById("image-file");
+const fileInput     = document.getElementById("image-file");
 const analyzeButton = document.getElementById("analyze-button");
-const form = document.getElementById("diagnosis-form");
-let selectedFile = null;
+const form          = document.getElementById("diagnosis-form");
+let selectedFile    = null;
 
-function setError(message) {
-  document.getElementById("diagnosis-error").textContent = message;
+function setError(msg) {
+  document.getElementById("diagnosis-error").textContent = msg;
+}
+
+// Convert raw variant key to a readable label
+function variantLabel(key) {
+  if (key === "fedavg_global")       return "FedAvg — Global";
+  const fedbn = key.match(/^fedbn_hospital(\d+)$/);
+  if (fedbn)  return `FedBN — Hospital ${fedbn[1]}`;
+  const local = key.match(/^local_hospital(\d+)$/);
+  if (local)  return `Local — Hospital ${local[1]}`;
+  return key;
 }
 
 function previewFile(file) {
@@ -20,30 +30,26 @@ function previewFile(file) {
   selectedFile = file;
   analyzeButton.disabled = false;
   setError("");
-  document.getElementById("original-image").src = URL.createObjectURL(file);
 }
 
 async function loadVariants() {
   const select = document.getElementById("variant-select");
   try {
-    const response = await fetch("/api/variants");
-    const data = await response.json();
+    const data = await fetch("/api/variants").then((r) => r.json());
     select.replaceChildren();
-    data.variants.forEach((variant) => {
-      const option = document.createElement("option");
-      option.value = variant;
-      option.textContent = variant.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-      select.append(option);
-    });
     if (!data.variants.length) {
-      const option = document.createElement("option");
-      option.textContent = "No saved model checkpoints found";
-      option.value = "";
-      select.append(option);
+      select.append(Object.assign(document.createElement("option"), { value: "", textContent: "No checkpoints found" }));
       analyzeButton.disabled = true;
+      return;
     }
-  } catch (_error) {
-    setError("Model options could not be loaded. Check that saved checkpoints exist.");
+    data.variants.forEach((key) => {
+      const opt = document.createElement("option");
+      opt.value = key;
+      opt.textContent = variantLabel(key);
+      select.append(opt);
+    });
+  } catch {
+    setError("Could not load model variants.");
   }
 }
 
@@ -51,45 +57,34 @@ function renderRanked(ranked) {
   const list = document.getElementById("ranked-results");
   list.replaceChildren();
   ranked.forEach((item) => {
-    const row = document.createElement("li");
-    const className = document.createElement("span");
-    className.className = "ranked-class";
-    className.textContent = item.class;
-    const score = document.createElement("span");
-    score.className = "ranked-score";
-    score.textContent = `${(item.probability * 100).toFixed(1)}%`;
+    const li = document.createElement("li");
+    const name  = Object.assign(document.createElement("span"), { className: "ranked-class",  textContent: item.class });
+    const score = Object.assign(document.createElement("span"), { className: "ranked-score", textContent: `${(item.probability * 100).toFixed(1)}%` });
     const track = document.createElement("span");
-    track.className = "rank-track";
+    track.className = "rank-bar";
     const fill = document.createElement("span");
     fill.style.width = `${Math.max(0, Math.min(item.probability * 100, 100))}%`;
     track.append(fill);
-    row.append(className, score, track);
-    list.append(row);
+    li.append(name, score, track);
+    list.append(li);
   });
 }
 
 fileInput.addEventListener("change", () => previewFile(fileInput.files[0]));
-fileInput.addEventListener("dragover", (event) => event.preventDefault());
-fileInput.addEventListener("drop", (event) => {
-  event.preventDefault();
-  const file = event.dataTransfer.files[0];
-  previewFile(file);
+
+document.getElementById("opacity-range").addEventListener("input", (e) => {
+  document.getElementById("heatmap-image").style.opacity = String(Number(e.target.value) / 100);
+  document.getElementById("opacity-value").value = `${e.target.value}%`;
 });
 
-document.getElementById("opacity-range").addEventListener("input", (event) => {
-  const opacity = Number(event.target.value) / 100;
-  document.getElementById("heatmap-image").style.opacity = String(opacity);
-  document.getElementById("opacity-value").value = `${event.target.value}%`;
-});
-
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
   if (!selectedFile) return;
   analyzeButton.disabled = true;
   analyzeButton.textContent = "Analyzing…";
   setError("");
   try {
-    const variant = document.getElementById("variant-select").value;
+    const variant  = document.getElementById("variant-select").value;
     const response = await fetch(`/api/predict?variant=${encodeURIComponent(variant)}`, {
       method: "POST",
       headers: { "Content-Type": selectedFile.type || "application/octet-stream" },
@@ -98,17 +93,18 @@ form.addEventListener("submit", async (event) => {
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Prediction failed.");
+
     renderRanked(result.ranked);
     document.getElementById("prediction-title").textContent = result.top_class;
-    document.getElementById("inference-time").textContent = `${result.milliseconds.toFixed(0)} ms`;
+    document.getElementById("inference-time").textContent   = `${result.milliseconds.toFixed(0)} ms`;
     document.getElementById("original-image").src = `data:image/png;base64,${result.original_png}`;
-    document.getElementById("heatmap-image").src = `data:image/png;base64,${result.heatmap_png}`;
+    document.getElementById("heatmap-image").src  = `data:image/png;base64,${result.heatmap_png}`;
     document.getElementById("diagnosis-output").hidden = false;
-  } catch (error) {
-    setError(error.message);
+  } catch (err) {
+    setError(err.message);
   } finally {
     analyzeButton.disabled = false;
-    analyzeButton.innerHTML = '<span aria-hidden="true">↗</span> Analyze image';
+    analyzeButton.textContent = "Analyze";
   }
 });
 

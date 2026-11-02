@@ -14,13 +14,15 @@ from medifed.config import NUM_CLASSES
 def build_model(pretrained: bool = True) -> nn.Module:
     """Return a ResNet18 with the final FC layer replaced for NUM_CLASSES outputs.
 
-    Using the pretrained ImageNet backbone gives a strong feature extractor for
-    chest X-rays without requiring a large local dataset per hospital.
+    Dropout(0.3) before the classifier reduces overfitting on small hospital
+    validation sets (e.g. H2 TB which has very few val images).
     """
     weights = ResNet18_Weights.DEFAULT if pretrained else None
     model = resnet18(weights=weights)
-    # Replace only the final layer; all other layers keep their pretrained weights.
-    model.fc = nn.Linear(model.fc.in_features, NUM_CLASSES)
+    model.fc = nn.Sequential(
+        nn.Dropout(p=0.3),
+        nn.Linear(model.fc.in_features, NUM_CLASSES),
+    )
     return model
 
 

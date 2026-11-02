@@ -46,7 +46,9 @@ def load_results(results_dir: str | Path = RESULTS_DIR) -> dict:
 
     comparison_by_hospital = {int(row["hospital"]): row for row in comparison_rows}
     hospitals = []
-    hospital_colors = {1: "#0F6B6E", 2: "#3F5E9A", 3: "#A3532B"}
+    # Generate colors for any number of hospitals from a fixed palette.
+    _palette = ["#0F6B6E", "#3F5E9A", "#A3532B", "#6B3FA0", "#2E7D32", "#C62828"]
+    hospital_colors = {hid: _palette[(hid - 1) % len(_palette)] for hid in HOSPITALS}
     for hospital_id, details in HOSPITALS.items():
         metrics = comparison_by_hospital.get(hospital_id, {})
         hospitals.append(

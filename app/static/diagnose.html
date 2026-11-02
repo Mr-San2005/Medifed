@@ -12,10 +12,11 @@
   <header class="site-header">
     <a class="brand" href="/">
       <span class="brand-mark">M</span>
-      <span>MediFed<span class="brand-sub">Federated Learning · Chest X-ray</span></span>
+      <span>MediFed<span class="brand-sub">Privacy-Preserving Medical AI</span></span>
     </a>
     <nav>
-      <a class="nav-link" href="/">Results</a>
+      <a class="nav-link" href="/">Dashboard</a>
+      <a class="nav-link" href="/network">Architecture</a>
       <a class="nav-link active" href="/diagnose">Diagnosis</a>
     </nav>
   </header>
@@ -23,18 +24,18 @@
   <main class="page-shell diagnosis-shell">
     <div class="page-heading">
       <h1>Image Diagnosis</h1>
-      <p>Select a model checkpoint and upload a chest X-ray to run inference with Grad-CAM visualization.</p>
+      <p>Upload a chest X-ray to get a ranked prediction and Grad-CAM heatmap.</p>
     </div>
 
     <form id="diagnosis-form" class="diagnosis-form">
       <div class="field-block">
-        <label for="variant-select">Model variant</label>
+        <label for="variant-select">Model</label>
         <select id="variant-select" name="variant" required>
-          <option value="">Loading variants…</option>
+          <option value="">Loading…</option>
         </select>
       </div>
       <div class="field-block">
-        <label for="image-file">Chest X-ray image</label>
+        <label for="image-file">Chest X-ray</label>
         <input id="image-file" name="image" type="file" accept="image/*" required>
       </div>
       <button id="analyze-button" class="button button-primary" type="submit" disabled>
@@ -56,10 +57,8 @@
         </div>
         <div class="preview-panel">
           <div class="preview-header">
-            <h3>Grad-CAM overlay</h3>
-            <label for="opacity-range">
-              Opacity <output id="opacity-value">50%</output>
-            </label>
+            <h3>Grad-CAM</h3>
+            <label for="opacity-range">Opacity <output id="opacity-value">50%</output></label>
           </div>
           <div class="heatmap-legend">
             <span>Low</span>
@@ -78,7 +77,7 @@
 
   <footer class="site-footer">
     <span>MediFed · Federated Learning Research</span>
-    <span>ResNet18 · Flower · PyTorch</span>
+    <span>NIE · ISE · 2025–26</span>
   </footer>
 </body>
 </html>

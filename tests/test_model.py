@@ -35,10 +35,10 @@ class TestBuildModel(unittest.TestCase):
     def test_final_layer_only_changed(self):
         """TC-MODEL-002: the final layer has exactly 4 outputs and no other layer was changed in shape."""
         model = build_model(pretrained=False)
-        # Final FC must have NUM_CLASSES outputs.
-        self.assertEqual(model.fc.out_features, NUM_CLASSES)
-        # The in_features of the FC must be 512 (ResNet18 standard).
-        self.assertEqual(model.fc.in_features, 512)
+        # fc is now Sequential(Dropout, Linear) — get the Linear layer.
+        linear = model.fc[-1]
+        self.assertEqual(linear.out_features, NUM_CLASSES)
+        self.assertEqual(linear.in_features, 512)
 
     def test_get_device_type(self):
         """TC-MODEL-003: get_device returns cuda when available and cpu otherwise."""

@@ -163,12 +163,19 @@ def read_manifest(path: Path) -> list[dict]:
 def get_transforms(train: bool) -> transforms.Compose:
     """Return the image transform pipeline.
 
-    RandomRotation(5) is added for training only.  No horizontal flip because
-    chest X-rays have a fixed left-right orientation (heart position matters).
+    Training augmentations reduce overfitting on small hospital datasets:
+    - RandomAffine: small shifts and scale variation (scanner positioning differences)
+    - ColorJitter: brightness/contrast variation (different scanner calibrations)
+    - RandomRotation: slight tilt
+    No horizontal flip — chest X-rays have fixed left-right orientation (heart position matters).
     """
     ops = []
     if train:
-        ops.append(transforms.RandomRotation(5))
+        ops += [
+            transforms.RandomRotation(10),
+            transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), scale=(0.95, 1.05)),
+            transforms.ColorJitter(brightness=0.2, contrast=0.2),
+        ]
     ops += [
         transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
         transforms.ToTensor(),

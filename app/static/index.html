@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MediFed — Results</title>
+  <title>MediFed — Dashboard</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d6b6e'/%3E%3Cpath d='M16 7v18M7 16h18' stroke='white' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/static/css/style.css">
   <script defer src="/static/js/charts.js"></script>
@@ -13,47 +13,48 @@
   <header class="site-header">
     <a class="brand" href="/">
       <span class="brand-mark">M</span>
-      <span>MediFed<span class="brand-sub">Federated Learning · Chest X-ray</span></span>
+      <span>MediFed<span class="brand-sub">Privacy-Preserving Medical AI</span></span>
     </a>
     <nav>
-      <a class="nav-link active" href="/">Results</a>
+      <a class="nav-link active" href="/">Dashboard</a>
+      <a class="nav-link" href="/network">Architecture</a>
       <a class="nav-link" href="/diagnose">Diagnosis</a>
     </nav>
   </header>
 
   <main class="page-shell">
     <div class="page-heading">
-      <h1>Federated Training Results</h1>
-      <p>Validation accuracy across three hospital partitions — FedAvg baseline vs FedBN personalized.</p>
+      <h1>Training Dashboard</h1>
+      <p>FedBN vs FedAvg · <span id="hospital-count">—</span> hospitals · <span id="round-count">—</span> rounds</p>
     </div>
 
     <section class="metric-strip" aria-label="Summary">
-      <div class="metric-cell">
-        <span class="metric-label">Hospitals</span>
-        <strong id="hospital-count">—</strong>
-        <span class="metric-note">data partitions</span>
+      <div class="metric-cell metric-emphasis">
+        <span class="metric-label">FedBN mean accuracy</span>
+        <strong id="fedbn-mean">—</strong>
+        <span class="metric-note">across all hospitals</span>
       </div>
       <div class="metric-cell">
-        <span class="metric-label">Validation images</span>
-        <strong id="validation-count">—</strong>
-        <span class="metric-note">held-out per split</span>
-      </div>
-      <div class="metric-cell">
-        <span class="metric-label">Federated rounds</span>
-        <strong id="round-count">—</strong>
-        <span class="metric-note">per training run</span>
+        <span class="metric-label">FedAvg mean accuracy</span>
+        <strong id="fedavg-mean">—</strong>
+        <span class="metric-note">across all hospitals</span>
       </div>
       <div class="metric-cell metric-emphasis">
-        <span class="metric-label">FedBN vs FedAvg</span>
+        <span class="metric-label">FedBN gain</span>
         <strong id="fedbn-delta">—</strong>
-        <span class="metric-note">mean accuracy gain</span>
+        <span class="metric-note">over FedAvg</span>
+      </div>
+      <div class="metric-cell">
+        <span class="metric-label">Local mean accuracy</span>
+        <strong id="local-mean">—</strong>
+        <span class="metric-note">no federation baseline</span>
       </div>
     </section>
 
     <section class="section-block" aria-labelledby="hospital-title">
       <div class="section-heading">
-        <h2 id="hospital-title">Per-hospital validation accuracy</h2>
-        <span class="unit-label">Best-round accuracy across 10 federated rounds</span>
+        <h2 id="hospital-title">Accuracy by Hospital</h2>
+        <span class="unit-label">Best-round validation accuracy · 10 federated rounds</span>
       </div>
       <div id="hospital-grid" class="hospital-grid">
         <p class="empty-state">Loading…</p>
@@ -62,39 +63,35 @@
 
     <section class="section-block" aria-labelledby="comparison-title">
       <div class="section-heading">
-        <h2 id="comparison-title">Method comparison</h2>
-        <span class="unit-label">Local · FedAvg · FedBN by hospital</span>
+        <h2 id="comparison-title">Method Comparison</h2>
+        <span class="unit-label">Local · FedAvg · FedBN per hospital</span>
       </div>
       <div class="chart-frame">
-        <svg id="comparison-chart" role="img" aria-label="Grouped bar chart comparing Local, FedAvg and FedBN accuracy per hospital"></svg>
+        <svg id="comparison-chart" role="img" aria-label="Method comparison bar chart"></svg>
       </div>
     </section>
 
     <section class="section-block" aria-labelledby="rounds-title">
       <div class="section-heading">
-        <h2 id="rounds-title">Accuracy per round</h2>
-        <span class="unit-label">FedAvg vs FedBN convergence</span>
+        <h2 id="rounds-title">Training Convergence</h2>
+        <span class="unit-label">Validation accuracy over federated rounds</span>
       </div>
       <div class="chart-toolbar" id="round-hospital-tabs" role="group" aria-label="Select hospital"></div>
       <div class="chart-frame">
-        <svg id="rounds-chart" role="img" aria-label="Line chart of validation accuracy over federated rounds"></svg>
+        <svg id="rounds-chart" role="img" aria-label="Convergence line chart"></svg>
       </div>
     </section>
 
-    <section class="section-block cross-section" aria-labelledby="cross-title">
+    <section class="section-block" aria-labelledby="cross-title">
       <div class="section-heading">
-        <h2 id="cross-title">Cross-hospital generalization — local models</h2>
-        <span class="unit-label">Row = model trained at · Column = evaluated at</span>
+        <h2 id="cross-title">Cross-Hospital Generalization</h2>
+        <span class="unit-label">How well each model performs outside its own hospital</span>
       </div>
-      <div class="table-wrap" id="cross-hospital-table"></div>
-    </section>
-
-    <section class="section-block cross-section" aria-labelledby="cross-fedbn-title">
-      <div class="section-heading">
-        <h2 id="cross-fedbn-title">Cross-hospital generalization — FedBN models</h2>
-        <span class="unit-label">Row = FedBN model · Column = evaluated at</span>
+      <div class="chart-toolbar" id="cross-tabs" role="group" aria-label="Select model type">
+        <button type="button" class="tab-button" data-tab="local" aria-pressed="true">Local models</button>
+        <button type="button" class="tab-button" data-tab="fedbn" aria-pressed="false">FedBN models</button>
       </div>
-      <div class="table-wrap" id="cross-fedbn-table"></div>
+      <div class="table-wrap" id="cross-table"></div>
     </section>
 
     <p id="dashboard-error" class="error-message" role="status"></p>
@@ -102,7 +99,7 @@
 
   <footer class="site-footer">
     <span>MediFed · Federated Learning Research</span>
-    <span>ResNet18 · Flower · PyTorch</span>
+    <span>NIE · ISE · 2025–26</span>
   </footer>
 </body>
 </html>
